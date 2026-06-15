@@ -1,4 +1,4 @@
-# nest-ai-boot
+# @kumvjs/nest-ai-boot
 Nestjs, TypeORM, PostgreSQL, Redis, RBAC, AI GenCode, and LLMs.
 
 <p align="center">
@@ -95,6 +95,11 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 - Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
 - Website - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
+
+### 致谢
+
+- [nest-admin](https://github.com/buqiyuan/nest-admin)
+- [sf-nest-admin](https://github.com/hackycy/sf-nest-admin)
 
 ## License
 
