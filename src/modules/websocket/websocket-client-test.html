@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket 测试客户端</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    input, button {
+      padding: 8px 12px;
+      margin: 5px;
+    }
+    input {
+      width: 300px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .log {
+      background-color: #f5f5f5;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .log-item {
+      margin: 5px 0;
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+    .log-error {
+      color: red;
+    }
+    .log-success {
+      color: green;
+    }
+    .log-info {
+      color: blue;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    .status-connected {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .status-disconnected {
+      background-color: #f44336;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebSocket 测试客户端</h1>
+
+  <!-- 连接状态 -->
+  <div class="section">
+    <h3>连接状态: <span id="status" class="status status-disconnected">未连接</span></h3>
+    <div>
+      <label>服务器地址:</label>
+      <input type="text" id="serverUrl" value="http://localhost:7001" />
+      <label>命名空间:</label>
+      <input type="text" id="namespace" value="/chat" style="width: 100px;" />
+    </div>
+    <div>
+      <label>JWT Token:</label>
+      <input type="text" id="token" placeholder="从登录接口获取的 access_token" />
+    </div>
+    <div>
+      <button id="connectBtn" onclick="connect()">连接</button>
+      <button id="disconnectBtn" onclick="disconnect()" disabled>断开连接</button>
+    </div>
+  </div>
+
+  <!-- 测试操作 -->
+  <div class="section">
+    <h3>测试操作</h3>
+    <div>
+      <h4>1. 发送消息 (需要登录)</h4>
+      <input type="text" id="messageInput" placeholder="输入消息内容" />
+      <button onclick="sendMessage()" id="sendMessageBtn" disabled>发送</button>
+    </div>
+    <div>
+      <h4>2. 广播消息 (需要 system:broadcast 权限)</h4>
+      <input type="text" id="broadcastInput" placeholder="输入广播内容" />
+      <button onclick="sendBroadcast()" id="broadcastBtn" disabled>广播</button>
+    </div>
+    <div>
+      <h4>3. Ping 测试 (公开接口，无需认证)</h4>
+      <button onclick="sendPing()" id="pingBtn" disabled>发送 Ping</button>
+    </div>
+  </div>
+
+  <!-- 日志输出 -->
+  <div class="section">
+    <h3>日志输出 <button onclick="clearLog()">清空日志</button></h3>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script>
+    let socket = null;
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString();
+      const item = document.createElement('div');
+      item.className = `log-item log-${type}`;
+      item.textContent = `[${timestamp}] ${message}`;
+      logDiv.appendChild(item);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('log').innerHTML = '';
+    }
+
+    function updateStatus(connected) {
+      const statusEl = document.getElementById('status');
+      const connectBtn = document.getElementById('connectBtn');
+      const disconnectBtn = document.getElementById('disconnectBtn');
+      const sendMessageBtn = document.getElementById('sendMessageBtn');
+      const broadcastBtn = document.getElementById('broadcastBtn');
+      const pingBtn = document.getElementById('pingBtn');
+
+      if (connected) {
+        statusEl.textContent = '已连接';
+        statusEl.className = 'status status-connected';
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        sendMessageBtn.disabled = false;
+        broadcastBtn.disabled = false;
+        pingBtn.disabled = false;
+      } else {
+        statusEl.textContent = '未连接';
+        statusEl.className = 'status status-disconnected';
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        sendMessageBtn.disabled = true;
+        broadcastBtn.disabled = true;
+        pingBtn.disabled = true;
+      }
+    }
+
+    function connect() {
+      const serverUrl = document.getElementById('serverUrl').value;
+      const namespace = document.getElementById('namespace').value;
+      const token = document.getElementById('token').value;
+
+      if (!token) {
+        log('请先输入 JWT Token', 'error');
+        return;
+      }
+
+      const url = serverUrl + namespace;
+      log(`正在连接到 ${url}...`, 'info');
+
+      try {
+        socket = io(url, {
+          auth: {
+            token: token
+          },
+          extraHeaders: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        socket.on('connect', () => {
+          log('✅ WebSocket 连接成功！', 'success');
+          log(`客户端 ID: ${socket.id}`, 'info');
+          updateStatus(true);
+        });
+
+        socket.on('disconnect', (reason) => {
+          log(`❌ 连接断开: ${reason}`, 'error');
+          updateStatus(false);
+        });
+
+        socket.on('error', (error) => {
+          log(`❌ 错误: ${JSON.stringify(error)}`, 'error');
+        });
+
+        socket.on('message', (data) => {
+          log(`📨 收到消息: ${JSON.stringify(data)}`, 'success');
+        });
+
+        socket.on('broadcast', (data) => {
+          log(`📢 收到广播: ${JSON.stringify(data)}`, 'success');
+        });
+
+        socket.on('pong', (data) => {
+          log(`🏓 收到 Pong: ${JSON.stringify(data)}`, 'success');
+        });
+
+        socket.on('connect_error', (error) => {
+          log(`❌ 连接错误: ${error.message}`, 'error');
+          updateStatus(false);
+        });
+
+      } catch (error) {
+        log(`❌ 连接失败: ${error.message}`, 'error');
+      }
+    }
+
+    function disconnect() {
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+        log('已断开连接', 'info');
+        updateStatus(false);
+      }
+    }
+
+    function sendMessage() {
+      if (!socket || !socket.connected) {
+        log('请先连接到服务器', 'error');
+        return;
+      }
+
+      const content = document.getElementById('messageInput').value;
+      if (!content) {
+        log('请输入消息内容', 'error');
+        return;
+      }
+
+      log(`发送消息: ${content}`, 'info');
+      socket.emit('message', { content }, (response) => {
+        log(`服务器响应: ${JSON.stringify(response)}`, 'success');
+      });
+
+      document.getElementById('messageInput').value = '';
+    }
+
+    function sendBroadcast() {
+      if (!socket || !socket.connected) {
+        log('请先连接到服务器', 'error');
+        return;
+      }
+
+      const content = document.getElementById('broadcastInput').value;
+      if (!content) {
+        log('请输入广播内容', 'error');
+        return;
+      }
+
+      log(`发送广播: ${content}`, 'info');
+      socket.emit('broadcast', { content }, (response) => {
+        log(`服务器响应: ${JSON.stringify(response)}`, 'success');
+      });
+
+      document.getElementById('broadcastInput').value = '';
+    }
+
+    function sendPing() {
+      if (!socket || !socket.connected) {
+        log('请先连接到服务器', 'error');
+        return;
+      }
+
+      log('发送 Ping...', 'info');
+      socket.emit('ping', {}, (response) => {
+        log(`服务器响应: ${JSON.stringify(response)}`, 'success');
+      });
+    }
+
+    // 支持回车键发送消息
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    document.getElementById('broadcastInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendBroadcast();
+    });
+  </script>
+</body>
+</html>
