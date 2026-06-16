@@ -4,6 +4,7 @@ import { DataSource, LoggerOptions } from 'typeorm'
 import { DatabaseConfig } from '@/config'
 import { databaseConfig } from '@/config/database.config'
 import { TypeORMLogger } from './typeorm-logger'
+import { AuditSubscriber } from './subscribers/audit.subscriber'
 
 @Module({
   imports: [
@@ -38,5 +39,6 @@ import { TypeORMLogger } from './typeorm-logger'
       },
     }),
   ],
+  providers: [AuditSubscriber]
 })
-export class DatabaseModule {}
+export class DatabaseModule { }
