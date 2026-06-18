@@ -43,7 +43,7 @@ export class WsInterceptor implements NestInterceptor {
                 if (result?.event) {
                   client.emit(
                     result.event,
-                    WsResOp.success(result.data ?? null, ERROR_CODES.SUCCESS.message, traceId),
+                    WsResOp.success(result.data ?? null, ERROR_CODES.SUCCESS.message),
                   )
                 }
                 if (!isProd) {

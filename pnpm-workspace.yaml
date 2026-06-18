@@ -1,0 +1,9 @@
+allowBuilds:
+  '@hyperjump/json-pointer': true
+  '@hyperjump/json-schema': true
+  '@hyperjump/json-schema-core': true
+  '@hyperjump/pact': true
+  '@scarf/scarf': true
+  protobufjs: true
+  puppeteer: false
+  unrs-resolver: true

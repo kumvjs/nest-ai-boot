@@ -15,11 +15,10 @@ export class WsPushService {
   constructor(
     private readonly wsSession: WsSessionService,
     private readonly wsServer: WsServerService,
-  ) {}
+  ) { }
 
   makeResData(data) {
-    const { traceId, userId } = TraceContext.storage.getStore() ?? {}
-    return WsResOp.success(data ?? null, ERROR_CODES.SUCCESS.message, traceId)
+    return WsResOp.success(data ?? null, ERROR_CODES.SUCCESS.message)
   }
 
   /**

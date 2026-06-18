@@ -20,7 +20,7 @@ import { ResOp } from '../dto/response.dto'
  */
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<T, ResOp<T>> {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) { }
 
   intercept(
     context: ExecutionContext,
@@ -36,7 +36,6 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ResOp<T>> {
 
     const http = context.switchToHttp()
     const request = http.getRequest<FastifyRequest>()
-    const { traceId, userId } = TraceContext.storage.getStore() ?? {}
 
     // 处理 query 参数，将数组参数转换为数组,如：?a[]=1&a[]=2 => { a: [1, 2] }
     request.query = qs.parse(request.url.split('?').at(1))
@@ -48,7 +47,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ResOp<T>> {
         //   return data;
         // }
 
-        return ResOp.success(data ?? null, ERROR_CODES.SUCCESS.message, traceId)
+        return ResOp.success(data ?? null, ERROR_CODES.SUCCESS.message)
       }),
     )
   }

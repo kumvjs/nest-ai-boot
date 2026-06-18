@@ -8,6 +8,6 @@ import { OperationLogService } from './operation-log.service'
   imports: [TypeOrmModule.forFeature([OperationLogEntity])],
   controllers: [OperationLogController],
   providers: [OperationLogService],
-  export: [OperationLogService]
+  exports: [OperationLogService]
 })
 export class OperationLogModule { }

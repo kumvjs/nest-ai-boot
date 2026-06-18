@@ -15,6 +15,7 @@ import { ERROR_CODES } from '../constants/error-code.constant'
 import { ResOp } from '../dto/response.dto'
 import { BusinessException } from '../exceptions/business.exception'
 
+interface ErrorInfoType { code: number, message: string, httpStatus: number, errors: string[] }
 /**
  * 统一异常过滤器 - 同时支持 HTTP 和 WebSocket
  *
@@ -50,11 +51,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
   /**
    * 提取错误信息 - HTTP 和 WS 共同逻辑
    */
-  private extractErrorInfo(exception: unknown): {
-    code: number
-    message: string
-    httpStatus: number
-  } {
+  private extractErrorInfo(exception: unknown): ErrorInfoType {
     let code: number = ERROR_CODES.ERROR.code
     let message: string = ERROR_CODES.ERROR.message
     let httpStatus = HttpStatus.INTERNAL_SERVER_ERROR
@@ -72,24 +69,22 @@ export class CatchEverythingFilter implements ExceptionFilter {
         : (errorResponse as any)?.message || exception.message
     }
     else if (exception instanceof HttpException) {
+      code = exception.getStatus()
       httpStatus = exception.getStatus()
       const errorResponse = exception.getResponse()
 
-      const nestMessage = typeof errorResponse === 'object' && errorResponse !== null
+      message = typeof errorResponse === 'object' && errorResponse !== null
         ? (errorResponse as any).message || exception.message
         : errorResponse || exception.message
-
-      if (!isProd) {
-        message = Array.isArray(nestMessage)
-          ? nestMessage.join(', ')
-          : nestMessage
-      }
     }
     else {
       message = (exception as Error)?.message ?? message
     }
 
-    return { code, message, httpStatus }
+    const errors = Array.isArray(message)
+      ? message
+      : [message]
+    return { code, message: errors[0], errors, httpStatus }
   }
 
   /**
@@ -97,7 +92,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
    */
   private handleHttpError(
     host: ArgumentsHost,
-    errorInfo: { code: number, message: string, httpStatus: number },
+    errorInfo: ErrorInfoType,
     traceId?: string,
     userId?: string,
   ): void {
@@ -113,7 +108,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
     const responseBody = ResOp.error(
       errorInfo.code,
       errorInfo.message,
-      traceId,
+      errorInfo.errors,
     )
 
     response
@@ -127,7 +122,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
    */
   private handleWsError(
     host: ArgumentsHost,
-    errorInfo: { code: number, message: string, httpStatus: number },
+    errorInfo: ErrorInfoType,
     traceId?: string,
     userId?: string,
   ): void {
@@ -140,7 +135,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
     const responseBody = ResOp.error(
       errorInfo.code,
       errorInfo.message,
-      traceId,
+      errorInfo.errors,
     )
 
     client.emit('error', responseBody)
