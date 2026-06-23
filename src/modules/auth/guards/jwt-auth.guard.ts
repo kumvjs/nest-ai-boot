@@ -41,8 +41,6 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
       context.getHandler(),
       context.getClass(),
     ])
-    if (isPublic)
-      return true
 
     if (context.getType() === 'ws') {
       const wsCheck = await this.activateWs(context, isPublic)
@@ -64,13 +62,15 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
   private async activateHttp(context: ExecutionContext, isPublic: boolean): Promise<boolean> {
     const request = context.switchToHttp().getRequest<FastifyRequest>()
 
-    if (RouterWhiteList.includes(request.routeOptions.url || ''))
-      return true
-
     const token = this.httpTokenExtractor(request) || ''
-
-    if (!token)
+    // 如果没有传递 token
+    if (!token) {
+      if (isPublic) {
+        return true // 没传 token 且是 isPublic，直接放行
+      }
+      // 没传 token 且不是 isPublic，抛错
       throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
+    }
 
     request.accessToken = token
 
@@ -106,14 +106,17 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
    * （Socket.IO 的 client.data 是框架提供的上下文存储，非业务数据）
    */
   private async activateWs(context: ExecutionContext, isPublic: boolean): Promise<boolean> {
-    if (isPublic)
-      return true
-
     const client = context.switchToWs().getClient<Socket>()
     const token = this.extractWsToken(client)
 
-    if (!token)
+    // 如果没有传递 token
+    if (!token) {
+      if (isPublic) {
+        return true // 没传 token 且是 isPublic，直接放行
+      }
+      // 没传 token 且不是 isPublic，抛错
       throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
+    }
 
     let loginUser: LoginUserContext
     try {

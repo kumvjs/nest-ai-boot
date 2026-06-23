@@ -6,8 +6,8 @@ import { ERROR_CODES } from '../constants/error-code.constant'
 interface ResOpType {
   code: number
   data: any
-  message?: string
   errors?: string[]
+  message?: string
   success: boolean
 }
 
@@ -19,11 +19,11 @@ export class ResOp<T = any> {
   @ApiProperty()
   data: any
 
-  @ApiProperty({ default: ERROR_CODES.SUCCESS.message })
-  message: string = ERROR_CODES.SUCCESS.message
-
   @ApiProperty({ type: Array<string>, required: false })
   errors?: string[]
+
+  @ApiProperty({ default: ERROR_CODES.SUCCESS.message })
+  message: string = ERROR_CODES.SUCCESS.message
 
   @ApiProperty({ default: true })
   success: boolean
