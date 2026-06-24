@@ -28,7 +28,7 @@ export class AuthService {
     const user = await this.userService.findUserForLogin(credential)
 
     if (!user)
-      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND)
+      throw new BusinessException(ERROR_CODES.USER_PASSWORD_ERROR) // 不提示账户不存在 防止扫用户账号
 
     if (!user.verifyPassword(password))
       throw new BusinessException(ERROR_CODES.USER_PASSWORD_ERROR)
