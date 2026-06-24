@@ -42,7 +42,7 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
       context.getClass(),
     ])
 
-    if (context.getType() === 'ws') {
+    if (contextType === 'ws') {
       const wsCheck = await this.activateWs(context, isPublic)
 
       try {
