@@ -61,6 +61,16 @@ async function bootstrap() {
       // forbidNonWhitelisted: true, // 禁止 无装饰器验证的数据通过
       errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       stopAtFirstError: true,
+      /* exceptionFactory: (errors) => {
+        console.log('exceptionFactory', errors)
+        return new UnprocessableEntityException(
+          errors.map((e) => {
+            const rule = Object.keys(e.constraints!)[0]
+            const msg = e.constraints![rule]
+            return msg
+          })[0],
+        )
+      }, */
     }),
   )
 

@@ -37,6 +37,7 @@ export class SysUserEntity extends CommonEntity {
   @ApiProperty({ description: '启用状态' })
   status: boolean
 
+  @ApiHideProperty()
   @OneToMany(() => SysUserRoleEntity, ur => ur.user, {
     onDelete: 'CASCADE',
   })

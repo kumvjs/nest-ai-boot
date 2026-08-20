@@ -42,28 +42,30 @@ export const envValidationSchema = Joi.object({
   REDIS_PASSWORD: Joi.string().allow('').optional(),
   REDIS_DB: Joi.number().default(0),
 
-  LOGGER_LOG_LEVELS: Joi.string().empty('')
-    .custom((value, helpers) => {
-      const levels = value
-        .split(',')
-        .map(v => v.trim())
-        .filter(Boolean)
+  LOGGER_LOG_LEVELS: Joi.string().empty('').custom((value, helpers) => {
+    const levels = value
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean)
 
-      const allowed = ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
+    const allowed = ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
 
-      for (const level of levels) {
-        if (!allowed.includes(level)) {
-          return helpers.error('any.invalid')
-        }
+    for (const level of levels) {
+      if (!allowed.includes(level)) {
+        return helpers.error('any.invalid')
       }
+    }
 
-      return levels
-    })
-    .optional(),
+    return levels
+  }).optional(),
   LOGGER_TIMESTAMP: Joi.boolean().empty('').optional(),
   LOGGER_PREFIX: Joi.string().allow('').optional(),
   LOGGER_JSON: Joi.boolean().empty('').optional(),
   LOGGER_COLORS: Joi.boolean().empty('').optional(),
   LOGGER_COMPACT: Joi.boolean().empty('').optional(),
   LOGGER_DEPTH: Joi.number().empty('').optional(),
+
+  BAILIAN_WORK_SPACE_ID: Joi.string().required(),
+  BAILIAN_DASHSCOPE_API_KEY: Joi.string().required(),
+  BAILIAN_MODEL: Joi.string().required(),
 })

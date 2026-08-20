@@ -1,5 +1,6 @@
 import cluster from 'node:cluster'
 import { APP_CONFIG } from './app.config'
+import { BAI_LIAN_CONFIG } from './bai-lian.config'
 import { databaseConfig } from './database.config'
 import { REDIS_CONFIG } from './redis.config'
 import { securityConfig } from './security.config'
@@ -16,4 +17,4 @@ export const isMainProcess = cluster.isPrimary || isMainCluster
 export const isDev = process.env.NODE_ENV === 'development'
 export const isProd = process.env.NODE_ENV === 'production'
 
-export default { APP_CONFIG, databaseConfig, securityConfig, REDIS_CONFIG, SWAGGER_CONFIG }
+export default { APP_CONFIG, databaseConfig, securityConfig, REDIS_CONFIG, SWAGGER_CONFIG, BAI_LIAN_CONFIG }

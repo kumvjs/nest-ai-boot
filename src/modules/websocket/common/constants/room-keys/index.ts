@@ -1,6 +1,5 @@
 import { WS_NS } from '../ws-ns.constants'
 
-export * from './live-room.keys'
 export * from './uid.keys'
 
 export type NominalWsRoomKey<T extends string> = string & { readonly __wsRoomKeyBrand: T }

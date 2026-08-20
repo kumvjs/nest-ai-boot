@@ -3,7 +3,8 @@ import { HttpStatus } from '@nestjs/common'
 export interface ErrorCodeItem {
   code: number
   message: string
-  httpStatus?: HttpStatus | undefined
+  httpStatus?: HttpStatus
+  description?: string
 }
 export type ErrorCodes = Record<string, ErrorCodeItem>
 export const ERROR_CODES = {
@@ -12,6 +13,11 @@ export const ERROR_CODES = {
   SUCCESS: {
     code: 0,
     message: 'success',
+  },
+  UNPROCESSABLE_ENTITY: {
+    code: 422,
+    message: 'UNPROCESSABLE_ENTITY',
+    httpStatus: HttpStatus.UNPROCESSABLE_ENTITY,
   },
   ERROR: {
     code: 500,

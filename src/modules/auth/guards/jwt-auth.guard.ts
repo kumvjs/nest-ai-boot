@@ -79,6 +79,9 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
       result = await super.canActivate(context) as boolean
     }
     catch (err) {
+      if (isPublic) {
+        return true // 传 token 但是过期 isPublic，直接放行
+      }
       if (err instanceof UnauthorizedException)
         throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
 
@@ -123,6 +126,9 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
       loginUser = await this.tokenService.verifyAccessToken(token)
     }
     catch {
+      if (isPublic) {
+        return true // 传 token 但是过期 isPublic，直接放行
+      }
       throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
     }
 

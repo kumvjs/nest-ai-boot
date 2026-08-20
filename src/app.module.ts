@@ -13,6 +13,7 @@ import { RbacGuard } from './modules/auth/guards/rbac.guard'
 import { SystemModule } from './modules/system/system.module'
 import { UserModule } from './modules/user/user.module'
 import { WebsocketModule } from './modules/websocket/websocket.module'
+import { WssEventModule } from './modules/wss-event/wss-event.module'
 import { DatabaseModule } from './shared/database/database.module'
 import { SharedModule } from './shared/shared.module'
 
@@ -32,6 +33,7 @@ import { SharedModule } from './shared/shared.module'
     AiModule,
     SystemModule,
     WebsocketModule,
+    WssEventModule,
   ],
   controllers: [],
   providers: [
