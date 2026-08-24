@@ -43,9 +43,9 @@ export class RbacGuard implements CanActivate {
       return true
 
     // 统一获取 user
-    const user = this.getUser(context)
+    const loginUser = this.getLoginUser(context)
 
-    if (!user)
+    if (!loginUser)
       throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
 
     const payloadPermission = this.reflector.getAllAndOverride<
@@ -55,12 +55,12 @@ export class RbacGuard implements CanActivate {
     if (!payloadPermission)
       return true
 
-    /* if (user.roleCodes?.includes(Roles.SUPER))
-      return true */
+    if (loginUser.user?.role === Roles.SUPER)
+      return true
 
     // 核心逻辑：检查权限（HTTP 和 WS 完全一样）
-    const allPermissions = await this.authService.getPermissionsCache(Number(user.uid))
-      ?? await this.authService.getPermissionsByUserId(user.uid)
+    const allPermissions = await this.authService.getPermissionsCache(Number(loginUser.uid))
+      ?? await this.authService.getPermissionsByUserId(loginUser.uid)
 
     let canNext = false
 
@@ -79,7 +79,7 @@ export class RbacGuard implements CanActivate {
   /**
    * 获取 user - 统一 HTTP 和 WS
    */
-  private getUser(context: ExecutionContext): LoginUserContext | undefined {
+  private getLoginUser(context: ExecutionContext): LoginUserContext | undefined {
     const contextType = context.getType() as string
 
     if (contextType === 'http') {
