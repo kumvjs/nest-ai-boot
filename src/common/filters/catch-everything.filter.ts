@@ -101,7 +101,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
     const request = ctx.getRequest<FastifyRequest>()
     const url = decodeURI(request.raw.url || '')
 
-    this.logger.warn(
+    this.logger.error(
       `[HTTP Exception] <${errorInfo.httpStatus}> traceId: ${traceId}, userId: ${userId} ${errorInfo.message} - Path: ${url}`,
     )
 
@@ -128,7 +128,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
   ): void {
     const client = host.switchToWs().getClient<Socket>()
 
-    this.logger.warn(
+    this.logger.error(
       `[WS Exception] <${errorInfo.httpStatus}> traceId: ${traceId}, userId: ${userId}, clientId: ${client.id} - ${errorInfo.message}`,
     )
 

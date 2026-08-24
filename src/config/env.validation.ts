@@ -35,6 +35,7 @@ export const envValidationSchema = Joi.object({
   TYPEORM_USERNAME: Joi.string().required(),
   TYPEORM_PASSWORD: Joi.string().required(),
   TYPEORM_DATABASE: Joi.string().required(),
+  TYPEORM_SCHEMA: Joi.string().optional(),
   TYPEORM_SYNCHRONIZE: Joi.boolean().default(false),
 
   REDIS_HOST: Joi.string().required(),
@@ -64,8 +65,4 @@ export const envValidationSchema = Joi.object({
   LOGGER_COLORS: Joi.boolean().empty('').optional(),
   LOGGER_COMPACT: Joi.boolean().empty('').optional(),
   LOGGER_DEPTH: Joi.number().empty('').optional(),
-
-  BAILIAN_WORK_SPACE_ID: Joi.string().required(),
-  BAILIAN_DASHSCOPE_API_KEY: Joi.string().required(),
-  BAILIAN_MODEL: Joi.string().required(),
 })

@@ -1,9 +1,7 @@
-import type { BaiLianConfig } from '@/config/bai-lian.config'
 import { Inject, Injectable } from '@nestjs/common'
 import OpenAI from 'openai'
 import { APIPromise } from 'openai/core/api-promise'
 import { Stream } from 'openai/streaming'
-import { BAI_LIAN_CONFIG } from '@/config/bai-lian.config'
 import { CreateAiDto } from './dto/create-ai.dto'
 import { UpdateAiDto } from './dto/update-ai.dto'
 
@@ -11,12 +9,10 @@ import { UpdateAiDto } from './dto/update-ai.dto'
 export class AiService {
   private openAi: OpenAI
   constructor(
-    @Inject(BAI_LIAN_CONFIG.KEY)
-    baiLianConfig: BaiLianConfig,
   ) {
     this.openAi = new OpenAI(
       {
-        apiKey: baiLianConfig.apiKey,
+        apiKey: `apiKey`,
         // baseURL: `https://${baiLianConfig.workSpaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1`,
         baseURL: `https://dashscope.aliyuncs.com/compatible-mode/v1`,
       },

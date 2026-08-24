@@ -34,6 +34,24 @@ Nestjs, TypeORM, PostgreSQL, Redis, RBAC, AI GenCode, and LLMs.
 $ pnpm install
 ```
 
+## Initialize the framework
+
+Configure `.env.local`, create and run the database migrations, and then create
+the first administrator account and random JWT secrets:
+
+```bash
+$ pnpm run build
+$ pnpm run migration:generate
+$ pnpm run build
+$ pnpm run migration:run
+$ pnpm run init
+```
+
+The init command prompts for the administrator username and password. It creates
+the `admin` role, the administrator user and their role mapping in one
+transaction, then replaces `JWT_SECRET` and `REFRESH_TOKEN_SECRET` in
+`.env.local` with cryptographically random values.
+
 ## Compile and run the project
 
 ```bash
