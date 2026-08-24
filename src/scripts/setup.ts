@@ -11,7 +11,7 @@ import { SysRoleEntity } from '../modules/system/role/entities/role.entity'
 import SysUserRoleEntity from '../modules/user/entities/user-role.entity'
 import { SysUserEntity } from '../modules/user/entities/user.entity'
 
-const ADMIN_ROLE_NAME = 'Administrator'
+const SUPER_ROLE_NAME = 'super'
 const SECRET_KEYS = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'] as const
 
 function setEnvValue(content: string, key: string, value: string): string {
@@ -36,7 +36,7 @@ async function writeJwtSecrets(envPath: string): Promise<void> {
   await writeFile(envPath, envContent, 'utf8')
 }
 
-async function createAdmin(username: string, password: string): Promise<void> {
+async function createSuper(username: string, password: string): Promise<void> {
   await dataSource.transaction(async (manager) => {
     const roleRepository = manager.getRepository(SysRoleEntity)
     const userRepository = manager.getRepository(SysUserEntity)
@@ -50,39 +50,39 @@ async function createAdmin(username: string, password: string): Promise<void> {
       throw new Error(`User "${username}" already exists.`)
     }
 
-    let adminRole = await roleRepository.findOne({
-      where: { code: Roles.ADMIN },
+    let superRole = await roleRepository.findOne({
+      where: { code: Roles.SUPER },
       withDeleted: true,
     })
 
-    if (adminRole?.deletedAt) {
-      throw new Error('The admin role exists but has been deleted. Restore it before initialization.')
+    if (superRole?.deletedAt) {
+      throw new Error('The super role exists but has been deleted. Restore it before initialization.')
     }
 
-    if (!adminRole) {
-      adminRole = await roleRepository.save(roleRepository.create({
-        name: ADMIN_ROLE_NAME,
-        code: Roles.ADMIN,
-        remark: 'System administrator',
+    if (!superRole) {
+      superRole = await roleRepository.save(roleRepository.create({
+        name: SUPER_ROLE_NAME,
+        code: Roles.SUPER,
+        remark: 'System super',
         status: true,
         default: false,
       }))
     }
 
     const psalt = randomBytes(16).toString('hex')
-    const adminUser = userRepository.create({
+    const superUser = userRepository.create({
       username,
       psalt,
-      role: Roles.ADMIN,
+      role: Roles.SUPER,
       nickname: username,
       status: true,
     })
-    adminUser.password_hash = adminUser.encryptPassword(password, psalt)
-    await userRepository.save(adminUser)
+    superUser.password_hash = superUser.encryptPassword(password, psalt)
+    await userRepository.save(superUser)
 
     await userRoleRepository.save(userRoleRepository.create({
-      userId: adminUser.id,
-      roleId: adminRole.id,
+      userId: superUser.id,
+      roleId: superRole.id,
     }))
   })
 }
@@ -122,22 +122,22 @@ async function main(): Promise<void> {
   }
 
   try {
-    const username = (await readline.question('Admin username: ')).trim()
+    const username = (await readline.question('Super username: ')).trim()
     if (!username)
-      throw new Error('Admin username cannot be empty.')
+      throw new Error('Super username cannot be empty.')
     if (username.length > 100)
-      throw new Error('Admin username cannot exceed 100 characters.')
+      throw new Error('Super username cannot exceed 100 characters.')
 
-    const password = await askPassword('Admin password: ')
+    const password = await askPassword('Super password: ')
     if (password.length < 8)
-      throw new Error('Admin password must contain at least 8 characters.')
+      throw new Error('Super password must contain at least 8 characters.')
 
     const confirmation = await askPassword('Confirm password: ')
     if (password !== confirmation)
       throw new Error('Passwords do not match.')
 
     await dataSource.initialize()
-    await createAdmin(username, password)
+    await createSuper(username, password)
     await writeJwtSecrets(envPath)
 
     stdout.write(`Framework initialization completed.${EOL}`)

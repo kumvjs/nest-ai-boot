@@ -168,7 +168,7 @@ async canActivate(context: ExecutionContext) {
   const user = this.getUser(context)  // 统一获取
   
   // 核心逻辑（HTTP 和 WS 完全一样）
-  if (user.roles?.includes(Roles.ADMIN))
+  if (user.roles?.includes(Roles.SUPER))
     return true
   
   const allPermissions = await this.authService.getPermissionsByUserId(user.uid)

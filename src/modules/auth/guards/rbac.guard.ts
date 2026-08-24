@@ -55,7 +55,7 @@ export class RbacGuard implements CanActivate {
     if (!payloadPermission)
       return true
 
-    /* if (user.roleCodes?.includes(Roles.ADMIN))
+    /* if (user.roleCodes?.includes(Roles.SUPER))
       return true */
 
     // 核心逻辑：检查权限（HTTP 和 WS 完全一样）

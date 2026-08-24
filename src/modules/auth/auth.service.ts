@@ -9,6 +9,7 @@ import { authKeys } from '@/shared/cache/keys/auth.keys'
 import { generateUUID } from '@/utils'
 import { LoginLogService } from '../system/log/services/login-log.service'
 import { MenuService } from '../system/menu/menu.service'
+import { UserRoleService } from '../user/user-role/user-role.service'
 import { UserService } from '../user/user.service'
 import { TokenService } from './services/token.service'
 
@@ -22,6 +23,7 @@ export class AuthService {
     @Inject(securityConfig.KEY) private securityConfig: SecurityConfig,
     @Inject(APP_CONFIG.KEY) private appConfig: AppConfig,
     private loginLogService: LoginLogService,
+    private readonly userRoleService: UserRoleService,
   ) { }
 
   async validateUser(credential: string, password: string): Promise<any> {
@@ -124,5 +126,14 @@ export class AuthService {
   async getPermissionsCache(userId: number): Promise<string[]> {
     const permissionString = await this.cacheService.getCache(authKeys.userPermissions(userId))
     return permissionString || []
+  }
+
+  async codes(userId: string) {
+    const u = await this.userService.getUserById(userId)
+    if (!u) {
+      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND)
+    }
+    const roleCodes = await this.userRoleService.getUserRoleCodes(userId)
+    return [u?.role, ...roleCodes]
   }
 }

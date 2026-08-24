@@ -10,14 +10,17 @@ import { Public } from '@/common/decorators/public.decorator'
 import { ApiSecurityAuth } from '@/common/decorators/swagger.decorator'
 import { BusinessException } from '@/common/exceptions/business.exception'
 import { securityConfig } from '@/config'
-import { SysUserEntity } from '../user/entities/user.entity'
 import { AuthService } from './auth.service'
 import { LoginDto, LoginTokenResponseDto } from './dto/auth.dto'
 import { CaptchaService } from './services/captcha.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService, private readonly captchaService: CaptchaService, @Inject(securityConfig.KEY) private securityConfig: SecurityConfig) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly captchaService: CaptchaService,
+    @Inject(securityConfig.KEY) private securityConfig: SecurityConfig,
+  ) { }
 
   @Post('login')
   @Public()
@@ -74,11 +77,6 @@ export class AuthController {
   @ApiSecurityAuth()
   @ApiOperation({ summary: '获取用户的权限码' })
   async codes(@CurrentUser() user: LoginUserContext) {
-    return [
-      'AC_100100',
-      'AC_100110',
-      'AC_100120',
-      'AC_100010',
-    ]
+    return user.roleCodes
   }
 }
