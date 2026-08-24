@@ -29,7 +29,7 @@ export class MenuService {
     const rows = await this.menuRepository
       .createQueryBuilder('menu')
       .select('menu.permission', 'permission')
-      .innerJoin('menu.roles', 'role')
+      .innerJoin('menu.roleMenus', 'role')
       .where('role.id IN (:...roleIds)', { roleIds })
       .andWhere('menu.permission IS NOT NULL')
       .getRawMany<{ permission: string }>()

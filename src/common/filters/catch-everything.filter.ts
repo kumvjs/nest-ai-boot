@@ -55,7 +55,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
     let code: number = ERROR_CODES.ERROR.code
     let message: string = ERROR_CODES.ERROR.message
     let httpStatus = HttpStatus.INTERNAL_SERVER_ERROR
-
+    const exceptionType = Object.prototype.toString.call(exception)
     if (exception instanceof BusinessException) {
       code = exception.getErrorCode()
       httpStatus = exception.getStatus()
