@@ -8,7 +8,7 @@ import {
 import { CommonEntity } from '@/common/entity/common.entity'
 import { SysUserEntity } from '@/modules/user/entities/user.entity'
 
-@Entity('user_refresh_tokens')
+@Entity('user_refresh_token')
 export class RefreshTokenEntity extends CommonEntity {
   @Column({ length: 500 })
   value!: string

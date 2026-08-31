@@ -7,7 +7,7 @@ import { RefreshTokenEntity } from '@/modules/auth/entities/refresh-token.entity
 import { md5 } from '@/utils'
 import SysUserRoleEntity from './user-role.entity'
 
-@Entity({ name: 'users' })
+@Entity({ name: 'sys_user' })
 export class SysUserEntity extends CommonEntity {
   @Column({ length: 100 })
   @Index('username', { unique: true })

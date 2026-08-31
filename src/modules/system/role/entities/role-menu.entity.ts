@@ -5,7 +5,7 @@ import { CommonEntity } from '@/common/entity/common.entity'
 import { SysMenuEntity } from '../../menu/entities/menu.entity'
 import { SysRoleEntity } from './role.entity'
 
-@Entity({ name: 'sys_role_menus' })
+@Entity({ name: 'sys_role_menu' })
 export default class SysRoleMenuEntity extends CommonEntity {
   @Column({ name: 'role_id' })
   @ApiProperty()
