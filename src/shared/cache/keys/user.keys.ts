@@ -1,6 +1,6 @@
 // keys/user.keys.ts
 
-import { SysUserEntity } from '@/modules/user/entities/user.entity'
+import { SysUserEntity } from '#/modules/user/entities/user.entity.js'
 
 const USER_KEY_PREFIX = 'user' as const
 

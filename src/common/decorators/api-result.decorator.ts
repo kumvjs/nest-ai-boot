@@ -1,6 +1,6 @@
 import { applyDecorators, Type } from '@nestjs/common'
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger'
-import { ApiResultOptions, ResOp, ResultDataAndTotalDto } from '../dto/response.dto'
+import { ApiResultOptions, ResOp, ResultDataAndTotalDto } from '../dto/response.dto.js'
 
 const baseTypeNames = ['String', 'Number', 'Boolean']
 /**

@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common'
-import { PERMISSION_KEY } from '../auth.constant'
+import { PERMISSION_KEY } from '../auth.constant.js'
 
 /**
  * 权限装饰器 - 用于标记需要的权限

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { WsSessionService } from './ws-session.service'
+import { WsSessionService } from './ws-session.service.js'
 
 @Module({
   controllers: [],

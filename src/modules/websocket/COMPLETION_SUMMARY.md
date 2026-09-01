@@ -116,9 +116,9 @@ import {
   WsRbacGuard,
   WsExceptionFilter,
   WsTraceInterceptor,
-} from '@/modules/websocket'
-import { RequirePermissions } from '@/modules/auth/decorators'
-import { Public } from '@/common/decorators/public.decorator'
+} from '#/modules/websocket'
+import { RequirePermissions } from '#/modules/auth/decorators'
+import { Public } from '#/common/decorators/public.decorator'
 
 @WebSocketGateway({ namespace: '/your-namespace' })
 @UseGuards(WsJwtGuard, WsRbacGuard)      // JWT + RBAC

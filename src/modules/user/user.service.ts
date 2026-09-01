@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { BusinessException } from '@/common/exceptions/business.exception'
-import { CacheService } from '@/shared/cache/cache.service'
-import { userKeys } from '@/shared/cache/keys'
-import { SysUserEntity } from './entities/user.entity'
-import { UserRoleService } from './user-role/user-role.service'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { BusinessException } from '#/common/exceptions/business.exception.js'
+import { CacheService } from '#/shared/cache/cache.service.js'
+import { userKeys } from '#/shared/cache/keys/index.js'
+import { SysUserEntity } from './entities/user.entity.js'
+import { UserRoleService } from './user-role/user-role.service.js'
 
 @Injectable()
 export class UserService {

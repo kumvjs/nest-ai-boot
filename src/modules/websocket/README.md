@@ -55,13 +55,13 @@ import {
 import { UseGuards, UseFilters, UseInterceptors } from '@nestjs/common'
 import { Socket } from 'socket.io'
 // 直接使用 HTTP 的 Guards 和 Filters ✅
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
-import { RbacGuard } from '@/modules/auth/guards/rbac.guard'
-import { CatchEverythingFilter } from '@/common/filters/catch-everything.filter'
+import { JwtAuthGuard } from '#/modules/auth/guards/jwt-auth.guard'
+import { RbacGuard } from '#/modules/auth/guards/rbac.guard'
+import { CatchEverythingFilter } from '#/common/filters/catch-everything.filter'
 // WebSocket 专用（但复用逻辑）
-import { WsTraceInterceptor } from '@/modules/websocket/interceptors/ws-trace.interceptor'
-import { RequirePermissions } from '@/modules/auth/decorators'
-import { Public } from '@/common/decorators/public.decorator'
+import { WsTraceInterceptor } from '#/modules/websocket/interceptors/ws-trace.interceptor'
+import { RequirePermissions } from '#/modules/auth/decorators'
+import { Public } from '#/common/decorators/public.decorator'
 
 @WebSocketGateway({ namespace: '/your-namespace' })
 @UseGuards(JwtAuthGuard, RbacGuard)       // 与 HTTP 完全相同

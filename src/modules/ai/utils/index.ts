@@ -1,1 +1,1 @@
-export * from './parse-ai-content'
+export * from './parse-ai-content.js'

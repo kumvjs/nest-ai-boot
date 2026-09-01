@@ -3,11 +3,11 @@ import type { Socket } from 'socket.io'
 import { Injectable, Logger } from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { TraceMiddleware } from '@/common/middleware/trace.middleware'
-import { isProd } from '@/config'
-import { TraceContext } from '@/shared/logger/logger.service'
-import { WsResOp } from '../dto/ws.dto'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { TraceMiddleware } from '#/common/middleware/trace.middleware.js'
+import { isProd } from '#/config/index.js'
+import { TraceContext } from '#/shared/logger/logger.service.js'
+import { WsResOp } from '../dto/ws.dto.js'
 
 /**
  * WebSocket Trace + Transform Interceptor

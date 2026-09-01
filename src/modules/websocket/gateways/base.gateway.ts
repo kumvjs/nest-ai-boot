@@ -1,15 +1,15 @@
-import type { WS_NS_Type } from '../common/constants/ws-ns.constants'
+import type { WS_NS_Type } from '../common/constants/ws-ns.constants.js'
 import { Logger, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common'
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit } from '@nestjs/websockets'
-import { Namespace, Socket } from 'socket.io'
-import { CatchEverythingFilter } from '@/common/filters/catch-everything.filter'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
-import { RbacGuard } from '@/modules/auth/guards/rbac.guard'
-import { TokenService } from '@/modules/auth/services/token.service'
-import { WsRoomKey, wsUidKeys } from '../common/constants/room-keys'
-import { WsInterceptor } from '../interceptors/ws.interceptor'
-import { WsServerService } from '../ws-server/ws-server.service'
-import { WsSessionService } from '../ws-session/ws-session.service'
+import { DefaultEventsMap, Namespace, RemoteSocket, Socket } from 'socket.io'
+import { CatchEverythingFilter } from '#/common/filters/catch-everything.filter.js'
+import { JwtAuthGuard } from '#/modules/auth/guards/jwt-auth.guard.js'
+import { RbacGuard } from '#/modules/auth/guards/rbac.guard.js'
+import { TokenService } from '#/modules/auth/services/token.service.js'
+import { WsRoomKey, wsUidKeys } from '../common/constants/room-keys/index.js'
+import { WsInterceptor } from '../interceptors/ws.interceptor.js'
+import { WsServerService } from '../ws-server/ws-server.service.js'
+import { WsSessionService } from '../ws-session/ws-session.service.js'
 
 @UseGuards(JwtAuthGuard, RbacGuard)
 @UseFilters(CatchEverythingFilter)
@@ -94,7 +94,7 @@ export abstract class BaseRbacGateway implements OnGatewayInit, OnGatewayConnect
 
   protected async getRoomSockets(
     roomKey: WsRoomKey,
-  ) {
+  ): Promise<RemoteSocket<DefaultEventsMap, Record<string, unknown>>[]> {
     return this.server.in(roomKey).fetchSockets()
   }
 

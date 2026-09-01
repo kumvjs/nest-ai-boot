@@ -8,11 +8,11 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { BusinessException } from '@/common/exceptions/business.exception'
-import { isProd } from '@/config'
-import { PERMISSION_KEY, PUBLIC_KEY, Roles } from '../auth.constant'
-import { AuthService } from '../auth.service'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { BusinessException } from '#/common/exceptions/business.exception.js'
+import { isProd } from '#/config/index.js'
+import { PERMISSION_KEY, PUBLIC_KEY, Roles } from '../auth.constant.js'
+import { AuthService } from '../auth.service.js'
 
 /**
  * RBAC Guard - 同时支持 HTTP 和 WebSocket

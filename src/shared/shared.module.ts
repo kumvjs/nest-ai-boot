@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common'
-import { CacheModule } from './cache/cache.module'
+import { CacheModule } from './cache/cache.module.js'
 
-import { LoggerModule } from './logger/logger.module'
+import { LoggerModule } from './logger/logger.module.js'
 
 @Global()
 @Module({

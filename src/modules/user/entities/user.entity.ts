@@ -2,10 +2,10 @@ import type { Relation } from 'typeorm'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import { Exclude } from 'class-transformer'
 import { Column, Entity, Index, OneToMany } from 'typeorm'
-import { CommonEntity } from '@/common/entity/common.entity'
-import { RefreshTokenEntity } from '@/modules/auth/entities/refresh-token.entity'
-import { md5 } from '@/utils'
-import SysUserRoleEntity from './user-role.entity'
+import { CommonEntity } from '#/common/entity/common.entity.js'
+import { RefreshTokenEntity } from '#/modules/auth/entities/refresh-token.entity.js'
+import { md5 } from '#/utils/index.js'
+import SysUserRoleEntity from './user-role.entity.js'
 
 @Entity({ name: 'sys_user' })
 export class SysUserEntity extends CommonEntity {

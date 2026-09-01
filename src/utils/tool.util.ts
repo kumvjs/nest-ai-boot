@@ -1,6 +1,6 @@
 import { customAlphabet, nanoid } from 'nanoid'
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { BusinessException } from '@/common/exceptions/business.exception'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { BusinessException } from '#/common/exceptions/business.exception.js'
 
 export interface RandomStringOptions {
   minLength: number

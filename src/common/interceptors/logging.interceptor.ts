@@ -7,7 +7,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { Observable, tap } from 'rxjs'
-import { isProd } from '@/config'
+import { isProd } from '#/config/index.js'
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {

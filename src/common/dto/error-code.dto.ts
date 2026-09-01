@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { ERROR_CODES } from '../constants/error-code.constant'
+import { ERROR_CODES } from '../constants/error-code.constant.js'
 
 export class ErrorCodeDto {
   @ApiProperty({

@@ -2,13 +2,13 @@ import { INestApplication, Inject, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
-import { AppConfig, appRegToken } from '@/config'
-import { SwaggerConfig, swaggerRegToken } from '@/config/swagger.config'
-import { API_SECURITY_AUTH } from '../decorators/swagger.decorator'
-import { ErrorCodeDto } from '../dto/error-code.dto'
-import { PageQueryDto } from '../dto/page-query.dto'
-import { ResOp } from '../dto/response.dto'
-import { CommonEntity } from '../entity/common.entity'
+import { AppConfig, appRegToken } from '#/config/index.js'
+import { SwaggerConfig, swaggerRegToken } from '#/config/swagger.config.js'
+import { API_SECURITY_AUTH } from '../decorators/swagger.decorator.js'
+import { ErrorCodeDto } from '../dto/error-code.dto.js'
+import { PageQueryDto } from '../dto/page-query.dto.js'
+import { ResOp } from '../dto/response.dto.js'
+import { CommonEntity } from '../entity/common.entity.js'
 
 export function setupSwagger(
   app: INestApplication,

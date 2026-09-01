@@ -1,8 +1,7 @@
 import type { Relation } from 'typeorm'
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm'
-import { CommonEntity } from '@/common/entity/common.entity'
-import SysRoleMenu from '../../role/entities/role-menu.entity'
-import { SysRoleEntity } from '../../role/entities/role.entity'
+import { Column, Entity, OneToMany } from 'typeorm'
+import { CommonEntity } from '#/common/entity/common.entity.js'
+import SysRoleMenu from '../../role/entities/role-menu.entity.js'
 
 export enum MenuType {
   CATALOG = 0,

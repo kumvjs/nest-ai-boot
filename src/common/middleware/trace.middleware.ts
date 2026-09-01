@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { Injectable, NestMiddleware } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { TraceContext } from '@/shared/logger/logger.service'
+import { TraceContext } from '#/shared/logger/logger.service.js'
 
 /**
  * TraceMiddleware - 同时支持 HTTP 和 WebSocket

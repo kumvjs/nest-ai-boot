@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { BusinessException } from '@/common/exceptions/business.exception'
-import { CacheService } from '@/shared/cache/cache.service'
-import { authKeys } from '@/shared/cache/keys'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { BusinessException } from '#/common/exceptions/business.exception.js'
+import { CacheService } from '#/shared/cache/cache.service.js'
+import { authKeys } from '#/shared/cache/keys/index.js'
 
 @Injectable()
 export class CaptchaService {

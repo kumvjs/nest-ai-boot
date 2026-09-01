@@ -1,10 +1,10 @@
 import { Controller, Get } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
-import { ApiResult } from '@/common/decorators/api-result.decorator'
-import { CurrentUser } from '@/common/decorators/current-user.decorator'
-import { ApiSecurityAuth } from '@/common/decorators/swagger.decorator'
-import { SysUserEntity } from './entities/user.entity'
-import { UserService } from './user.service'
+import { ApiResult } from '#/common/decorators/api-result.decorator.js'
+import { CurrentUser } from '#/common/decorators/current-user.decorator.js'
+import { ApiSecurityAuth } from '#/common/decorators/swagger.decorator.js'
+import { SysUserEntity } from './entities/user.entity.js'
+import { UserService } from './user.service.js'
 
 @Controller('user')
 @ApiSecurityAuth()

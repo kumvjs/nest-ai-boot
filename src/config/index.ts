@@ -1,13 +1,13 @@
 import cluster from 'node:cluster'
-import { APP_CONFIG } from './app.config'
-import { databaseConfig } from './database.config'
-import { REDIS_CONFIG } from './redis.config'
-import { securityConfig } from './security.config'
-import { SWAGGER_CONFIG } from './swagger.config'
+import { APP_CONFIG } from './app.config.js'
+import { databaseConfig } from './database.config.js'
+import { REDIS_CONFIG } from './redis.config.js'
+import { securityConfig } from './security.config.js'
+import { SWAGGER_CONFIG } from './swagger.config.js'
 
-export * from './app.config'
-export * from './database.config'
-export * from './security.config'
+export * from './app.config.js'
+export * from './database.config.js'
+export * from './security.config.js'
 
 export const isMainCluster
   = process.env.NODE_APP_INSTANCE && Number.parseInt(process.env.NODE_APP_INSTANCE) === 0

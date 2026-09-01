@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsString } from 'class-validator'
-import { ResOp } from '@/common/dto/response.dto'
+import { ResOp } from '#/common/dto/response.dto.js'
 
 export class WsMessagePayload {
   @ApiProperty()

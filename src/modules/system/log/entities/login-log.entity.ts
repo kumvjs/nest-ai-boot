@@ -1,8 +1,8 @@
 import type { Relation } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
-import { CommonEntity } from '@/common/entity/common.entity'
-import { SysUserEntity } from '@/modules/user/entities/user.entity'
+import { CommonEntity } from '#/common/entity/common.entity.js'
+import { SysUserEntity } from '#/modules/user/entities/user.entity.js'
 
 @Entity({ name: 'sys_login_log' })
 export class LoginLogEntity extends CommonEntity {

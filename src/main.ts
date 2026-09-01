@@ -1,32 +1,24 @@
 import cluster from 'node:cluster'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { HttpStatus, Logger, UnprocessableEntityException, ValidationPipe } from '@nestjs/common'
+import { HttpStatus, Logger, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { NestFactory } from '@nestjs/core'
-import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { useContainer } from 'class-validator'
-import { AppModule } from './app.module'
-import { fastifyApp } from './common/adapters/fastify.adapter'
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-// import { setupAsyncApi } from './common/setup/setup-asyncapi'
-import { setupSwagger } from './common/setup/setup-swagger'
-import { setupWsSwagger } from './common/setup/setup-ws-swagger'
-import { APP_CONFIG, AppConfig, isMainProcess, isProd } from './config'
-import { LoggerService } from './shared/logger/logger.service'
+import { AppModule } from './app.module.js'
+import { fastifyApp } from './common/adapters/fastify.adapter.js'
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js'
+// import { setupAsyncApi } from './common/setup/setup-asyncapi.js'
+import { setupSwagger } from './common/setup/setup-swagger.js'
+import { setupWsSwagger } from './common/setup/setup-ws-swagger.js'
+import { APP_CONFIG, AppConfig, isMainProcess, isProd } from './config/index.js'
+import { LoggerService } from './shared/logger/logger.service.js'
 
 declare const module: any
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    fastifyApp,
-    {
-      bufferLogs: true,
-      snapshot: true,
-      // forceCloseConnections: true,
-    },
-  )
-
+  console.error('[BOOT] before NestFactory.create')
+  const app = fastifyApp
+  console.error('[BOOT] after NestFactory.create')
   const configService = app.get(ConfigService)
 
   const appConfig = app.get<AppConfig>(
@@ -34,6 +26,7 @@ async function bootstrap() {
     { strict: false },
   )
   const { port, globalPrefix } = appConfig
+  console.error(`[BOOT] config loaded port=${port} prefix=${globalPrefix}`)
 
   // class-validator 的 DTO 类中注入 nest 容器的依赖 (用于自定义验证器)
   useContainer(app.select(AppModule), { fallbackOnErrors: true })
@@ -47,7 +40,21 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix(globalPrefix)
-  app.useStaticAssets({ root: path.join(__dirname, '..', 'public') })
+  // In development this module lives under `src/`; after `nest build` it is
+  // emitted under `dist/src/`. Resolve both layouts so Fastify never receives
+  // a non-existent static root.
+  const staticRootCandidates = [
+    path.resolve(import.meta.dirname, '..', 'public'),
+    path.resolve(import.meta.dirname, '..', '..', 'public'),
+    path.resolve(process.cwd(), 'public'),
+  ]
+  const staticRoot = staticRootCandidates.find(candidate => existsSync(candidate))
+  if (staticRoot) {
+    app.useStaticAssets({ root: staticRoot })
+  }
+  else {
+    console.warn(`[BOOT] static assets directory not found; checked: ${staticRootCandidates.join(', ')}`)
+  }
   // Starts listening for shutdown hooks
   isProd && app.enableShutdownHooks()
 
@@ -76,33 +83,42 @@ async function bootstrap() {
 
   // app.useWebSocketAdapter(new RedisIoAdapter(app))
 
+  console.error('[BOOT] before setupSwagger')
   const printSwaggerLog = setupSwagger(app, configService)
+  console.error('[BOOT] after setupSwagger')
   // const printWsSwaggerLog = setupWsSwagger(app, configService)
   // asyncApi 2.0有bug 暂不实现
   // const printAsyncApiLog = await setupAsyncApi(app, configService)
 
-  await app.listen(port, '0.0.0.0', async () => {
-    const loggerService = await app.resolve(LoggerService)
-    app.useLogger(loggerService)
-    const url = await app.getUrl()
-    const { pid } = process
-    const env = cluster.isPrimary
-    const prefix = env ? 'P' : 'W'
+  console.error('[BOOT] before app.listen')
+  // Use the Promise API.  Passing a callback through Nest's Fastify adapter
+  // can leave `app.listen()` pending with Fastify 5/Nest 12, even though Nest
+  // has already emitted "Nest application successfully started".
+  await app.listen(port, '0.0.0.0')
+  console.error('[BOOT] listen resolved')
+  app.useLogger(new LoggerService())
+  const url = await app.getUrl()
+  const { pid } = process
+  const prefix = cluster.isPrimary ? 'P' : 'W'
 
-    if (!isMainProcess)
-      return
-
+  if (isMainProcess) {
     printSwaggerLog?.()
     // printWsSwaggerLog?.()
     // printAsyncApiLog?.()
 
     const logger = new Logger('NestApplication')
     logger.log(`[${prefix + pid}] Server running on ${url}`)
-  })
-
-  if (module?.hot) {
-    module.hot?.accept()
-    module.hot?.dispose(() => app.close())
   }
+
+  console.error('[BOOT] after app.listen')
 }
-bootstrap()
+try {
+  // eslint-disable-next-line antfu/no-top-level-await
+  await bootstrap()
+}
+catch (error) {
+  // Top-level await rejections can otherwise look like a silent/incomplete
+  // startup when running the generated ESM entrypoint.
+  console.error('[BOOT] bootstrap failed', error)
+  process.exitCode = 1
+}

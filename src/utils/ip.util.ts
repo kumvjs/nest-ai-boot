@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify'
 import type { IncomingMessage } from 'node:http'
 import axios from 'axios'
-import { COMMON_LOGGER } from '@/common/constants/logger.constant'
+import { COMMON_LOGGER } from '#/common/constants/logger.constant.js'
 
 /**
  * 从请求中提取客户端 IP。

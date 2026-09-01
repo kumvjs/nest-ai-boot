@@ -1,7 +1,7 @@
-import type { LoggerConfig } from '@/config/logger.config'
+import type { LoggerConfig } from '#/config/logger.config.js'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { ConsoleLogger, ConsoleLoggerOptions, Inject, Injectable, LogLevel, Optional, Scope } from '@nestjs/common'
-import { LOGGER_CONFIG } from '@/config/logger.config'
+import { LOGGER_CONFIG } from '#/config/logger.config.js'
 
 // ─── Trace Context (AsyncLocalStorage for per-request traceId) ───────────────
 // Attach this in your middleware/interceptor before each request.
@@ -14,7 +14,6 @@ export interface AppLoggerOptions extends ConsoleLoggerOptions { }
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class LoggerService extends ConsoleLogger {
-
   private readonly envConfig?: LoggerConfig
 
   constructor()

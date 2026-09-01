@@ -10,10 +10,10 @@ import { Reflector } from '@nestjs/core'
 import qs from 'qs'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
-import { TraceContext } from '@/shared/logger/logger.service'
-import { ERROR_CODES } from '../constants/error-code.constant'
-import { SKIP_RESPONSE_TRANSFORM } from '../decorators/skip-response-transform.decorator'
-import { ResOp } from '../dto/response.dto'
+import { TraceContext } from '#/shared/logger/logger.service.js'
+import { ERROR_CODES } from '../constants/error-code.constant.js'
+import { SKIP_RESPONSE_TRANSFORM } from '../decorators/skip-response-transform.decorator.js'
+import { ResOp } from '../dto/response.dto.js'
 
 /**
  * 统一处理接口请求与响应结果，如果不需要则添加 @SkipResponseTransform 装饰器

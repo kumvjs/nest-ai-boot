@@ -1,9 +1,9 @@
 import type { INestApplication } from '@nestjs/common'
 import type { ConfigService } from '@nestjs/config'
-import type { AppConfig } from '@/config'
+import type { AppConfig } from '#/config/index.js'
 import { Logger } from '@nestjs/common'
 import { AsyncApiDocumentBuilder, AsyncApiModule } from 'nestjs-asyncapi'
-import { appRegToken } from '@/config'
+import { appRegToken } from '#/config/index.js'
 
 export async function setupAsyncApi(app: INestApplication, configService: ConfigService) {
   const { name, globalPrefix } = configService.get<AppConfig>(appRegToken)!

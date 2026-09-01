@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
-import { TraceContext } from '@/shared/logger/logger.service'
-import { ERROR_CODES } from '../constants/error-code.constant'
+import { TraceContext } from '#/shared/logger/logger.service.js'
+import { ERROR_CODES } from '../constants/error-code.constant.js'
 
 interface ResOpType {
   code: number

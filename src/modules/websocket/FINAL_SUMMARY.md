@@ -213,13 +213,13 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 import { Socket } from 'socket.io'
-import { Public } from '@/common/decorators/public.decorator'
-import { CatchEverythingFilter } from '@/common/filters/catch-everything.filter'
-import { RequirePermissions } from '@/modules/auth/decorators'
+import { Public } from '#/common/decorators/public.decorator'
+import { CatchEverythingFilter } from '#/common/filters/catch-everything.filter'
+import { RequirePermissions } from '#/modules/auth/decorators'
 // 直接使用 HTTP 的 Guards 和 Filters ✅
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
-import { RbacGuard } from '@/modules/auth/guards/rbac.guard'
-import { WsTraceInterceptor } from '@/modules/websocket/interceptors/ws-trace.interceptor'
+import { JwtAuthGuard } from '#/modules/auth/guards/jwt-auth.guard'
+import { RbacGuard } from '#/modules/auth/guards/rbac.guard'
+import { WsTraceInterceptor } from '#/modules/websocket/interceptors/ws-trace.interceptor'
 
 @WebSocketGateway({ namespace: '/chat' })
 @UseGuards(JwtAuthGuard, RbacGuard) // 与 HTTP 完全相同 ✅

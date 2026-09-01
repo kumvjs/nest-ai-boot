@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Column, Entity } from 'typeorm'
-import { CommonEntity } from '@/common/entity/common.entity'
+import { CommonEntity } from '#/common/entity/common.entity.js'
 
 export enum CaptchaProvider {
   UNKNOWN = 'unknown',

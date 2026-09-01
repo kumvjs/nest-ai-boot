@@ -1,6 +1,6 @@
 import type { FastifyRequest } from 'fastify'
 import type { Socket } from 'socket.io'
-import type { AppConfig } from '@/config'
+import type { AppConfig } from '#/config/index.js'
 import {
   ExecutionContext,
   Inject,
@@ -11,14 +11,14 @@ import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { AuthGuard } from '@nestjs/passport'
 import { ExtractJwt } from 'passport-jwt'
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { BusinessException } from '@/common/exceptions/business.exception'
-import { APP_CONFIG, RouterWhiteList } from '@/config'
-import { AuthService } from '@/modules/auth/auth.service'
-import { CacheService } from '@/shared/cache/cache.service'
-import { authKeys } from '@/shared/cache/keys'
-import { AuthStrategy, PUBLIC_KEY } from '../auth.constant'
-import { TokenService } from '../services/token.service'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { BusinessException } from '#/common/exceptions/business.exception.js'
+import { APP_CONFIG, RouterWhiteList } from '#/config/index.js'
+import { AuthService } from '#/modules/auth/auth.service.js'
+import { CacheService } from '#/shared/cache/cache.service.js'
+import { authKeys } from '#/shared/cache/keys/index.js'
+import { AuthStrategy, PUBLIC_KEY } from '../auth.constant.js'
+import { TokenService } from '../services/token.service.js'
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { UserRoleService } from '@/modules/user/user-role/user-role.service'
-import { SysMenuEntity } from './entities/menu.entity'
+import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
+import { SysMenuEntity } from './entities/menu.entity.js'
 
 @Injectable()
 export class MenuService {

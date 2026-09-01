@@ -1,17 +1,28 @@
 import FastifyCookie from '@fastify/cookie'
 import helmet from '@fastify/helmet'
 import FastifyMultipart from '@fastify/multipart'
-import { FastifyAdapter } from '@nestjs/platform-fastify'
+import { NestFactory } from '@nestjs/core'
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
+import { AppModule } from '#/app.module.js'
 
-const app: FastifyAdapter = new FastifyAdapter({
-  // @see https://www.fastify.io/docs/latest/Reference/Server/#trustproxy
-  trustProxy: true,
-  logger: false,
-  // forceCloseConnections: true,
-})
+// eslint-disable-next-line antfu/no-top-level-await
+const app = await NestFactory.create<NestFastifyApplication>(
+  AppModule,
+  new FastifyAdapter({
+    trustProxy: true,
+    logger: true,
+  }),
+  {
+    bufferLogs: false,
+    snapshot: true,
+    // forceCloseConnections: true,
+  },
+)
 export { app as fastifyApp }
 
 // api @fastify/helmet
+// Fastify v5 plugin type definitions use a narrower raw-server generic than
+// Nest's adapter; runtime compatibility is unchanged.
 app.register(helmet)
 
 app.register(FastifyMultipart, {
@@ -26,7 +37,10 @@ app.register(FastifyCookie, {
   secret: 'cookie-secret', // 这个 secret 不太重要，不存鉴权相关，无关紧要
 })
 
-app.getInstance().addHook('onRequest', (request, reply, done) => {
+// Access Fastify's native instance through Nest's HTTP adapter.  The
+// `NestFastifyApplication` interface exposes `getHttpAdapter()`, while
+// `getInstance()` belongs to the adapter itself (not the Nest application).
+app.getHttpAdapter().getInstance().addHook('onRequest', (request, reply, done) => {
   // set undefined origin
   const { origin } = request.headers
   if (!origin)

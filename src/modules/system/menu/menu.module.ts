@@ -1,10 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { UserModule } from '@/modules/user/user.module'
-import { RoleModule } from '../role/role.module'
-import { SysMenuEntity } from './entities/menu.entity'
-import { MenuController } from './menu.controller'
-import { MenuService } from './menu.service'
+import { UserModule } from '#/modules/user/user.module.js'
+import { RoleModule } from '../role/role.module.js'
+import { SysMenuEntity } from './entities/menu.entity.js'
+import { MenuController } from './menu.controller.js'
+import { MenuService } from './menu.service.js'
 
 @Module({
   imports: [TypeOrmModule.forFeature([SysMenuEntity]), forwardRef(() => RoleModule), forwardRef(() => UserModule)],
@@ -12,4 +12,4 @@ import { MenuService } from './menu.service'
   providers: [MenuService],
   exports: [MenuService],
 })
-export class MenuModule {}
+export class MenuModule { }

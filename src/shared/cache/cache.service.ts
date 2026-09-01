@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 
-import { CACHE_JITTER, CAHCE_TTL, NULL_PLACEHOLDER } from '@/common/constants/cache.constant'
-import { RedisKeys } from './keys'
-import { RedisService } from './redis/redis.servie'
+import { CACHE_JITTER, CAHCE_TTL, NULL_PLACEHOLDER } from '#/common/constants/cache.constant.js'
+import { RedisKeys } from './keys/index.js'
+import { RedisService } from './redis/redis.servie.js'
 
 type CacheValue = | string | number | boolean | object | null
 

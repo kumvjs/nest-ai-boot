@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Socket } from 'socket.io'
-import { WS_NS_Type } from '../common/constants/ws-ns.constants'
+import { WS_NS_Type } from '../common/constants/ws-ns.constants.js'
 
 /** 会话所属的命名空间类型 */
 export type SessionNamespace = WS_NS_Type

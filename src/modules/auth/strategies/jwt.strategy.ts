@@ -1,16 +1,16 @@
-import type { SecurityConfig } from '@/config'
+import type { SecurityConfig } from '#/config/index.js'
 import { Inject, Injectable } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 
 import { ExtractJwt, Strategy } from 'passport-jwt'
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
 
-import { BusinessException } from '@/common/exceptions/business.exception'
-import { securityConfig } from '@/config'
-import { UserRoleService } from '@/modules/user/user-role/user-role.service'
-import { UserService } from '@/modules/user/user.service'
-import { TraceContext } from '@/shared/logger/logger.service'
-import { AuthStrategy } from '../auth.constant'
+import { BusinessException } from '#/common/exceptions/business.exception.js'
+import { securityConfig } from '#/config/index.js'
+import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
+import { UserService } from '#/modules/user/user.service.js'
+import { TraceContext } from '#/shared/logger/logger.service.js'
+import { AuthStrategy } from '../auth.constant.js'
 
 /**
  * JWT Strategy - 同时支持 HTTP 和 WebSocket

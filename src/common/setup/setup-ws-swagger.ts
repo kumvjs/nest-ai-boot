@@ -2,9 +2,9 @@
 import { INestApplication, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { AppConfig, appRegToken } from '@/config'
-import { SwaggerConfig, swaggerRegToken } from '@/config/swagger.config'
-import { WebsocketModule } from '@/modules/websocket'
+import { AppConfig, appRegToken } from '#/config/index.js'
+import { SwaggerConfig, swaggerRegToken } from '#/config/swagger.config.js'
+import { WebsocketModule } from '#/modules/websocket/index.js'
 
 const WS_PATH = 'ws-docs'
 

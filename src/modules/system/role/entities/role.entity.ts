@@ -1,9 +1,9 @@
 import type { Relation } from 'typeorm'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import { Column, Entity, OneToMany } from 'typeorm'
-import { CommonEntity } from '@/common/entity/common.entity'
-import SysUserRoleEntity from '@/modules/user/entities/user-role.entity'
-import SysRoleMenuEntity from './role-menu.entity'
+import { CommonEntity } from '#/common/entity/common.entity.js'
+import SysUserRoleEntity from '#/modules/user/entities/user-role.entity.js'
+import SysRoleMenuEntity from './role-menu.entity.js'
 
 @Entity({ name: 'sys_role' })
 export class SysRoleEntity extends CommonEntity {

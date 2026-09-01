@@ -9,11 +9,11 @@ import {
   Logger,
 } from '@nestjs/common'
 import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets'
-import { isProd } from '@/config'
-import { TraceContext } from '@/shared/logger/logger.service'
-import { ERROR_CODES } from '../constants/error-code.constant'
-import { ResOp } from '../dto/response.dto'
-import { BusinessException } from '../exceptions/business.exception'
+import { isProd } from '#/config/index.js'
+import { TraceContext } from '#/shared/logger/logger.service.js'
+import { ERROR_CODES } from '../constants/error-code.constant.js'
+import { ResOp } from '../dto/response.dto.js'
+import { BusinessException } from '../exceptions/business.exception.js'
 
 interface ErrorInfoType { code: number, message: string, httpStatus: number, errors: string[] }
 /**

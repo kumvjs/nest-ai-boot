@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common'
 import OpenAI from 'openai'
 import { APIPromise } from 'openai/core/api-promise'
 import { Stream } from 'openai/streaming'
-import { CreateAiDto } from './dto/create-ai.dto'
-import { UpdateAiDto } from './dto/update-ai.dto'
+import { CreateAiDto } from './dto/create-ai.dto.js'
+import { UpdateAiDto } from './dto/update-ai.dto.js'
 
 @Injectable()
 export class AiService {

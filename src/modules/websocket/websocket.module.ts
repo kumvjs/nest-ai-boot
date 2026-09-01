@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
-import { WsInterceptor } from './interceptors/ws.interceptor'
-import { WsPushModule } from './ws-push/ws-push.module'
-import { WsServerModule } from './ws-server/ws-server.module'
-import { WsSessionModule } from './ws-session/ws-session.module'
+import { WsInterceptor } from './interceptors/ws.interceptor.js'
+import { WsPushModule } from './ws-push/ws-push.module.js'
+import { WsServerModule } from './ws-server/ws-server.module.js'
+import { WsSessionModule } from './ws-session/ws-session.module.js'
 
 @Module({
   imports: [WsSessionModule, WsServerModule, WsPushModule],

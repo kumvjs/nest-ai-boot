@@ -1,5 +1,5 @@
-import { CommonEntity } from "@/common/entity/common.entity";
-import { TraceContext } from "@/shared/logger/logger.service";
+import { CommonEntity } from "#/common/entity/common.entity.js";
+import { TraceContext } from "#/shared/logger/logger.service.js";
 import { Injectable } from "@nestjs/common";
 import { DataSource, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from "typeorm";
 

@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { ERROR_CODES } from '@/common/constants/error-code.constant'
-import { TraceContext } from '@/shared/logger/logger.service'
-import { WsRoomKey, wsRoomKeyGen } from '../common/constants/room-keys'
-import { WsEvent } from '../common/constants/ws-events'
-import { WS_NS_Type } from '../common/constants/ws-ns.constants'
-import { WsResOp } from '../dto/ws.dto'
-import { WsServerService } from '../ws-server/ws-server.service'
-import { WsSessionService } from '../ws-session/ws-session.service'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
+import { TraceContext } from '#/shared/logger/logger.service.js'
+import { WsRoomKey, wsRoomKeyGen } from '../common/constants/room-keys/index.js'
+import { WsEvent } from '../common/constants/ws-events/index.js'
+import { WS_NS_Type } from '../common/constants/ws-ns.constants.js'
+import { WsResOp } from '../dto/ws.dto.js'
+import { WsServerService } from '../ws-server/ws-server.service.js'
+import { WsSessionService } from '../ws-session/ws-session.service.js'
 
 @Injectable()
 export class WsPushService {

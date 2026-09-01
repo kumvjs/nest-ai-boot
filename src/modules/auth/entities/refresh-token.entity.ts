@@ -1,3 +1,4 @@
+import type { Relation } from 'typeorm'
 import {
   Column,
   Entity,
@@ -5,8 +6,8 @@ import {
   ManyToOne,
 } from 'typeorm'
 
-import { CommonEntity } from '@/common/entity/common.entity'
-import { SysUserEntity } from '@/modules/user/entities/user.entity'
+import { CommonEntity } from '#/common/entity/common.entity.js'
+import { SysUserEntity } from '#/modules/user/entities/user.entity.js'
 
 @Entity('user_refresh_token')
 export class RefreshTokenEntity extends CommonEntity {
@@ -23,5 +24,5 @@ export class RefreshTokenEntity extends CommonEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
-  user?: SysUserEntity
+  user?: Relation<SysUserEntity>
 }

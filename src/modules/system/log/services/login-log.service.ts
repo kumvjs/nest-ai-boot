@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 
 import { Repository } from 'typeorm'
 
-import { getIpAddress } from '@/utils'
-import { LoginLogEntity } from '../entities/login-log.entity'
+import { getIpAddress } from '#/utils/index.js'
+import { LoginLogEntity } from '../entities/login-log.entity.js'
 
 @Injectable()
 export class LoginLogService {
@@ -12,7 +12,7 @@ export class LoginLogService {
     @InjectRepository(LoginLogEntity)
     private loginLogRepository: Repository<LoginLogEntity>,
 
-  ) {}
+  ) { }
 
   async create(uid: string, ip: string, ua: string): Promise<void> {
     try {

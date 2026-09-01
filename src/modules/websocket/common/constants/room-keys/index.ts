@@ -1,6 +1,6 @@
-import { WS_NS } from '../ws-ns.constants'
+import { WS_NS } from '../ws-ns.constants.js'
 
-export * from './uid.keys'
+export * from './uid.keys.js'
 
 export type NominalWsRoomKey<T extends string> = string & { readonly __wsRoomKeyBrand: T }
 

@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { DataSource, LoggerOptions } from 'typeorm'
-import { DatabaseConfig } from '@/config'
-import { databaseConfig } from '@/config/database.config'
-import { TypeORMLogger } from './typeorm-logger'
-import { AuditSubscriber } from './subscribers/audit.subscriber'
+import { DatabaseConfig } from '#/config/index.js'
+import { databaseConfig } from '#/config/database.config.js'
+import { TypeORMLogger } from './typeorm-logger.js'
+import { AuditSubscriber } from './subscribers/audit.subscriber.js'
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
       useFactory: (db: DatabaseConfig) => {
+        console.error('[DB] config factory', { type: db.type })
         let loggerOptions: LoggerOptions = process.env.DB_LOGGING as 'all'
 
         try {
@@ -31,10 +32,12 @@ import { AuditSubscriber } from './subscribers/audit.subscriber'
       // dataSource receives the configured DataSourceOptions
       // and returns a Promise<DataSource>.
       dataSourceFactory: async (options) => {
+        console.error('[DB] before initialize')
         if (!options) {
           throw new Error('DataSourceOptions is required to initialize DataSource')
         }
         const dataSource = await new DataSource(options).initialize()
+        console.error('[DB] after initialize')
         return dataSource
       },
     }),

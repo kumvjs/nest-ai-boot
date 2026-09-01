@@ -1,1 +1,1 @@
-export * from './requirePermission.decorator'
+export * from './requirePermission.decorator.js'

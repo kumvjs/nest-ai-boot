@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { FastifyRequest } from 'fastify'
-import { SysUserEntity } from '@/modules/user/entities/user.entity'
+import { SysUserEntity } from '#/modules/user/entities/user.entity.js'
 
 export const CurrentUser = createParamDecorator(
   (field: keyof SysUserEntity | undefined, ctx: ExecutionContext) => {
