@@ -1,3 +1,7 @@
+packages:
+  - docs
+  - packages/*
+
 allowBuilds:
   '@hyperjump/json-pointer': true
   '@hyperjump/json-schema': true
