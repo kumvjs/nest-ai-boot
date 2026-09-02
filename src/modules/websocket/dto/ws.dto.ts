@@ -27,8 +27,6 @@ export class WsPingResponse {
 }
 
 export class WsResOp extends ResOp {
-  @ApiProperty({ default: '' })
-  uuid: string = randomUUID()
 }
 
 export class JoinRoomDto {

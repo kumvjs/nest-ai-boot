@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "nest build",
-    "setup": "pnpm build && cross-env NODE_ENV=local node dist/scripts/init.js",
+    "setup": "pnpm build && cross-env NODE_ENV=local node dist/src/scripts/init.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
@@ -26,10 +26,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "cross-env NODE_ENV=local typeorm-ts-node-commonjs",
     "migration:create": "pnpm typeorm migration:create ./src/migrations/initData",
-    "migration:generate": "pnpm typeorm -d ./dist/config/database.config.js migration:generate ./src/migrations/update-table",
-    "migration:run": "pnpm typeorm -d ./dist/config/database.config.js migration:run",
-    "migration:show": "pnpm typeorm -d ./dist/config/database.config.js migration:show",
-    "migration:revert": "pnpm typeorm -d ./dist/config/database.config.js migration:revert"
+    "migration:generate": "pnpm typeorm -d ./dist/src/config/database.config.js migration:generate ./src/migrations/update-table",
+    "migration:run": "pnpm typeorm -d ./dist/src/config/database.config.js migration:run",
+    "migration:show": "pnpm typeorm -d ./dist/src/config/database.config.js migration:show",
+    "migration:revert": "pnpm typeorm -d ./dist/src/config/database.config.js migration:revert"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
