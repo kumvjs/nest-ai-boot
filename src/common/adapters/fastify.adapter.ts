@@ -10,7 +10,11 @@ const app = await NestFactory.create<NestFastifyApplication>(
   AppModule,
   new FastifyAdapter({
     trustProxy: true,
-    logger: true,
+    logger: {
+      level: 'info',
+    },
+
+    disableRequestLogging: true,
   }),
   {
     bufferLogs: false,

@@ -56,7 +56,7 @@ async function bootstrap() {
     console.warn(`[BOOT] static assets directory not found; checked: ${staticRootCandidates.join(', ')}`)
   }
   // Starts listening for shutdown hooks
-  isProd && app.enableShutdownHooks()
+  app.enableShutdownHooks()
 
   app.useGlobalInterceptors(new LoggingInterceptor())
 
