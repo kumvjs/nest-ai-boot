@@ -4,9 +4,9 @@ This is an implementation backlog, not authorization to implement all items in o
 
 ## M0 — Upstream contract and version foundation
 
-- [ ] Add a machine-readable upstream lock containing repository, tag, full commit SHA, collected paths, and timestamp.
-- [ ] Add a read-only collector that shallow-clones and sparse-checks out the locked Vben commit into a temporary/cache directory.
-- [ ] Generate a snapshot for all 31 frontend-declared local API calls; track the two mock-only diagnostics separately.
+- [x] Add a machine-readable upstream lock containing repository, tag, full commit SHA, collected paths, and timestamp.
+- [x] Add a read-only collector that shallow-clones and sparse-checks out the locked Vben commit into a temporary/cache directory.
+- [x] Generate a snapshot for all 31 frontend-declared local API calls; track the two mock-only diagnostics separately.
 - [ ] Diff a candidate stable tag against the lock and report added, removed, renamed, method-changed, request-changed, response-changed, and mock-data-only changes.
 - [ ] Add an optional main-branch early-warning job that never updates the stable lock automatically.
 - [ ] Add upgrade-PR fields for compatibility class, schema/data migration, frontend rollout, rollback, and supported-baseline window.

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/vbenjs/vue-vben-admin.git",
+  "tag": "v5.7.0",
+  "commit": "63a38dce49ba109f61607994e21ba921d8e970e9",
+  "collectedAt": "2026-09-07T12:53:58+08:00",
+  "sources": {
+    "backend": [
+      "apps/backend-mock/api"
+    ],
+    "frontend": [
+      "playground/src/api",
+      "apps/web-antd/src/api/core",
+      "apps/web-antdv-next/src/api/core",
+      "apps/web-ele/src/api/core",
+      "apps/web-naive/src/api/core",
+      "apps/web-tdesign/src/api/core"
+    ],
+    "behavior": [
+      "playground/src/views/system"
+    ],
+    "types": [
+      "packages/types",
+      "packages/@core/base/typings"
+    ]
+  },
+  "snapshot": "contracts/vben/v5.7.0/api-contract.json",
+  "expected": {
+    "frontendEndpoints": 31,
+    "mockImplementedFrontendEndpoints": 22,
+    "frontendEndpointsMissingFromMock": 9,
+    "mockOnlyDiagnostics": 2
+  }
+}

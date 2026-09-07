@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Establish the authoritative Vben API scope and a versioned implementation backlog for a real NestJS/PostgreSQL/Redis backend. This phase performs research and planning only; it does not implement or modify endpoints.
+Establish the authoritative Vben API scope and implement the versioned backlog in small, independently verified batches for a real NestJS/PostgreSQL/Redis backend.
 
 ## Actors and affected modules
 
@@ -13,11 +13,12 @@ Establish the authoritative Vben API scope and a versioned implementation backlo
 ## Constraints
 
 - Existing login, refresh, logout, access-code, user-info, and system-user-list work must be reused and contract-tested, not blindly rewritten.
+- Implement one coherent milestone slice per batch and update `plan.md` only for work that has actually passed verification.
 - A route returning mock-shaped data is not complete: production work needs schema, constraints, transactions, authorization, cache invalidation, error behavior, migrations, and tests.
 - Swagger/OpenAPI remains the endpoint reference; these artifacts hold research, decisions, and TODOs only.
 - Upstream selection must support deterministic builds and future API-change detection.
 
-## Non-goals for this phase
+## Non-goals for the current M0.1 batch
 
 - No controller/service/entity/migration implementation.
 - No Vben source vendoring or runtime dependency installation.

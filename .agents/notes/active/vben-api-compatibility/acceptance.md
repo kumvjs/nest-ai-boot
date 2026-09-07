@@ -10,3 +10,12 @@
 - [x] No endpoint/entity/service/migration implementation is performed in this phase.
 
 Later implementation acceptance is defined per milestone in `plan.md` and must be refined before each milestone starts.
+
+## Current batch: M0.1
+
+- [x] Upstream repository, tag, full SHA, source paths, expected counts, and snapshot path are machine-readable.
+- [x] Collection uses a temporary shallow/filtered/sparse clone and verifies the checked-out SHA.
+- [x] The snapshot deterministically records 31 frontend endpoints, 22 mock-covered endpoints, 9 frontend-only endpoints, and 2 mock-only diagnostics.
+- [x] Hidden Nitro handler files such as `api/system/dept/.post.ts` are collected.
+- [x] A clean network-backed collection reproduces the committed snapshot.
+- [x] No application endpoint, authentication, authorization, entity, or migration code changed.

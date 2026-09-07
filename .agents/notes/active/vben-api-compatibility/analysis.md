@@ -25,7 +25,7 @@ The recommended retrieval method is a shallow, filtered, sparse Git clone into a
 4. `apps/web-*/src/api/core/**` — minimal runtime contracts for UI variants;
 5. `packages/types` and `packages/@core/base/typings` — user and route response types.
 
-At v5.7.0 the frontend declares 31 local-server requests. The mock implements 21 of them, while 10 system CRUD requests are called by the frontend but missing from the mock. The mock also exposes two unused `/test` diagnostic routes. Between v5.7.0 and the observed main, no API route was added, removed, or renamed; main fixes missing imports in `setTimezone` and changes config/mock data.
+At v5.7.0 the frontend declares 31 local-server requests. The mock implements 22 of them, while 9 system CRUD requests are called by the frontend but missing from the mock. The mock also exposes two unused `/test` diagnostic routes. The department-create mock is the hidden file `api/system/dept/.post.ts`; tooling that ignores dotfiles will miss it. Between v5.7.0 and the observed main, no API route was added, removed, or renamed; main fixes missing imports in `setTimezone` and changes config/mock data.
 
 ## API inventory
 
@@ -50,7 +50,7 @@ Paths omit this project's default `/api` global prefix.
 | Domain | Method and path | Request/query summary | Upstream mock | Current project |
 | --- | --- | --- | --- | --- |
 | Department | GET `/system/dept/list` | tree of `id,pid,name,status,remark,createTime,children` | Yes | Missing |
-| Department | POST `/system/dept` | `pid,name,status,remark` | **Missing** | Missing |
+| Department | POST `/system/dept` | `pid,name,status,remark` | Fake success only (`.post.ts`) | Missing |
 | Department | PUT `/system/dept/:id` | `pid,name,status,remark` | Fake success only | Missing |
 | Department | DELETE `/system/dept/:id` | id | Fake success only | Missing |
 | Menu | GET `/system/menu/list` | complete menu/button tree | Yes | Missing |
