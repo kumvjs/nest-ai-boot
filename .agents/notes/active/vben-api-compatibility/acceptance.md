@@ -105,3 +105,12 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] `sys_role_menu` uses bigint foreign keys, unique role/menu pairs, indexes, and deletion policies compatible with the rebuilt tables.
 - [x] No system-menu list, existence check, CRUD, or cache invalidation write hook is implemented in this batch.
 - [x] Service/controller/schema tests, full regression tests, type-checking, lint, Nest build, contract fixtures, docs, and diff checks pass.
+
+## Completed batch: M2.4
+
+- [x] `GET /system/menu/list` is authenticated, requires the canonical menu-list permission, and has a Swagger `ResOp<VbenMenuResponseDto[]>` contract.
+- [x] The response contains every non-deleted catalog/menu/embedded/link/button record, including disabled records, without exposing entity audit fields or relations.
+- [x] Bigint `id`/`pid`, numeric status, extensible metadata, optional route fields, and the v5.7.0 form-compatible top-level `activePath` retain Vben-compatible shapes without adding a redundant database column.
+- [x] Every record appears exactly once in a recursively ordered tree; malformed missing/self/cyclic parent links are normalized safely without producing circular JSON.
+- [x] No existence check, create/update/delete logic, or cache invalidation hook is implemented in this batch.
+- [x] Focused and full tests, type-checking, lint, Nest build, locked Vben contract fixtures, docs, and diff checks pass.

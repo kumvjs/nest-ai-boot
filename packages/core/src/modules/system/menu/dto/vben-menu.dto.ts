@@ -137,6 +137,9 @@ export class VbenMenuWriteDto {
 }
 
 export class VbenMenuResponseDto {
+  @ApiPropertyOptional({ description: '兼容 Vben v5.7.0 菜单编辑表单' })
+  activePath?: string
+
   @ApiPropertyOptional()
   authCode?: string
 

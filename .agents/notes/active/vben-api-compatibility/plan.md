@@ -30,7 +30,7 @@ Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI clien
 - [x] Define Vben-native menu types plus Swagger request/response DTOs for all five menu types and extensible metadata, without a redundant adapter layer.
 - [x] Redesign `sys_menu` as a fresh Vben-native table with JSONB metadata, bigint `pid`, numeric status, constraints, and indexes; existing menu data is intentionally not migrated.
 - [x] Implement `GET /menu/all` from enabled user roles and role-menu mappings, including required parent nodes and deterministic ordering.
-- [ ] Implement `GET /system/menu/list` as a complete menu/button tree.
+- [x] Implement `GET /system/menu/list` as a complete menu/button tree.
 - [ ] Implement `GET /system/menu/name-exists` and `GET /system/menu/path-exists` with edit-ID exclusion.
 - [ ] Implement `POST /system/menu`, `PUT /system/menu/:id`, and `DELETE /system/menu/:id`.
 - [ ] Enforce name/path/authCode rules, safe component/link values, valid type-dependent fields, and no parent cycles.

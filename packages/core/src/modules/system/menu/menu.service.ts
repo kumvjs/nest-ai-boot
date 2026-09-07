@@ -1,4 +1,4 @@
-import type { VbenRouteRecordDto } from './dto/vben-menu.dto.js'
+import type { VbenMenuResponseDto, VbenRouteRecordDto } from './dto/vben-menu.dto.js'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -6,6 +6,12 @@ import { Roles } from '#/modules/auth/auth.constant.js'
 import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
 import { SysMenuEntity } from './entities/menu.entity.js'
 import { MenuStatus, MenuType } from './menu.types.js'
+
+interface SortableTreeItem {
+  children?: SortableTreeItem[]
+  meta?: { order?: number }
+  name: string
+}
 
 @Injectable()
 export class MenuService {
@@ -50,6 +56,25 @@ export class MenuService {
     ])
 
     return this.buildDynamicRoutes(menus, grantedMenuIds)
+  }
+
+  async getSystemMenuList(): Promise<VbenMenuResponseDto[]> {
+    const menus = await this.menuRepository.find({
+      select: {
+        authCode: true,
+        component: true,
+        id: true,
+        meta: true,
+        name: true,
+        path: true,
+        pid: true,
+        redirect: true,
+        status: true,
+        type: true,
+      },
+    })
+
+    return this.buildSystemMenuTree(menus)
   }
 
   async getMenusByRoleIds(roleIds: string[]): Promise<string[]> {
@@ -192,24 +217,114 @@ export class MenuService {
         (parentRoute.children ??= []).push(route)
     }
 
-    this.sortRoutes(roots)
+    this.sortTree(roots)
     return roots
   }
 
-  private sortRoutes(routes: VbenRouteRecordDto[]): void {
-    routes.sort((left, right) => {
-      const leftOrder = typeof left.meta?.order === 'number' ? left.meta.order : 0
-      const rightOrder = typeof right.meta?.order === 'number' ? right.meta.order : 0
-      if (leftOrder !== rightOrder)
-        return leftOrder - rightOrder
-      if (left.name === right.name)
-        return 0
-      return left.name < right.name ? -1 : 1
-    })
+  private buildSystemMenuTree(menus: SysMenuEntity[]): VbenMenuResponseDto[] {
+    const menuById = new Map(menus.map(menu => [String(menu.id), menu]))
+    const normalizedParentIds = new Map<string, string | null>()
 
-    for (const route of routes) {
-      if (route.children)
-        this.sortRoutes(route.children)
+    for (const menu of menus) {
+      const menuId = String(menu.id)
+      const parentId = menu.pid ? String(menu.pid) : null
+      normalizedParentIds.set(
+        menuId,
+        parentId && parentId !== menuId && menuById.has(parentId) ? parentId : null,
+      )
     }
+
+    const completedIds = new Set<string>()
+    for (const startId of menuById.keys()) {
+      if (completedIds.has(startId))
+        continue
+
+      const path: string[] = []
+      const pathPositions = new Map<string, number>()
+      let currentId: string | null = startId
+
+      while (currentId && !completedIds.has(currentId)) {
+        const cycleStart = pathPositions.get(currentId)
+        if (cycleStart !== undefined) {
+          const cycleIds = path.slice(cycleStart)
+          const anchorId = [...cycleIds].sort((leftId, rightId) => {
+            const left = menuById.get(leftId)!
+            const right = menuById.get(rightId)!
+            return this.compareTreeItems(left, right)
+          })[0]
+          normalizedParentIds.set(anchorId, null)
+          break
+        }
+
+        pathPositions.set(currentId, path.length)
+        path.push(currentId)
+        currentId = normalizedParentIds.get(currentId) ?? null
+      }
+
+      for (const menuId of path)
+        completedIds.add(menuId)
+    }
+
+    const nodeById = new Map<string, VbenMenuResponseDto>()
+    for (const menu of menus) {
+      const menuId = String(menu.id)
+      const parentId = normalizedParentIds.get(menuId) ?? null
+      const node: VbenMenuResponseDto = {
+        id: menuId,
+        meta: { ...menu.meta },
+        name: menu.name,
+        status: menu.status,
+        type: menu.type,
+      }
+      if (typeof menu.meta.activePath === 'string' && menu.meta.activePath)
+        node.activePath = menu.meta.activePath
+      if (parentId)
+        node.pid = parentId
+      if (menu.authCode)
+        node.authCode = menu.authCode
+      if (menu.component)
+        node.component = menu.component
+      if (menu.path)
+        node.path = menu.path
+      if (menu.redirect)
+        node.redirect = menu.redirect
+
+      nodeById.set(menuId, node)
+    }
+
+    const roots: VbenMenuResponseDto[] = []
+    for (const [menuId, node] of nodeById) {
+      const parentId = normalizedParentIds.get(menuId)
+      const parent = parentId ? nodeById.get(parentId) : undefined
+      if (parent)
+        (parent.children ??= []).push(node)
+      else
+        roots.push(node)
+    }
+
+    this.sortTree(roots)
+    return roots
+  }
+
+  private sortTree(items: SortableTreeItem[]): void {
+    items.sort((left, right) => this.compareTreeItems(left, right))
+
+    for (const item of items) {
+      if (item.children)
+        this.sortTree(item.children)
+    }
+  }
+
+  private compareTreeItems(
+    left: SortableTreeItem,
+    right: SortableTreeItem,
+  ): number {
+    const leftOrder = typeof left.meta?.order === 'number' ? left.meta.order : 0
+    const rightOrder = typeof right.meta?.order === 'number' ? right.meta.order : 0
+    if (leftOrder !== rightOrder)
+      return leftOrder - rightOrder
+    if (left.name === right.name)
+      return 0
+    return left.name < right.name ? -1 : 1
   }
 }

@@ -45,3 +45,7 @@ export enum MenuType {
   LINK = 'link',
   MENU = 'menu',
 }
+
+export const MENU_PERMISSIONS = {
+  LIST: 'system:menu:list',
+} as const

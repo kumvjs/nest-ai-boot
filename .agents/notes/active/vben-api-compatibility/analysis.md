@@ -38,8 +38,8 @@ Paths omit this project's default `/api` global prefix.
 | POST | `/auth/login` | `{ username, password } -> { accessToken }`; refresh cookie | Exists |
 | POST | `/auth/refresh` | refresh cookie -> project contract `ResOp<{ accessToken }>`; generated OpenAPI client unwraps `data` | Exists; preserve envelope and contract-test it |
 | POST | `/auth/logout` | invalidate login state and cookie/session | Exists |
-| GET | `/auth/codes` | button/action permission `string[]` | Exists; currently returns role codes |
-| GET | `/user/info` | `userId`, `username`, `realName`, `avatar`, `roles`, `homePath` and compatible profile fields | Exists; needs a dedicated adapter DTO |
+| GET | `/auth/codes` | button/action permission `string[]` | Implemented with effective menu/button codes |
+| GET | `/user/info` | `userId`, `username`, `realName`, `avatar`, `roles`, `homePath` and compatible profile fields | Implemented with a dedicated response DTO |
 | GET | `/menu/all` | authorized `RouteRecordStringComponent[]` tree | Implemented in M2.3 |
 | GET | `/timezone/getTimezoneOptions` | `Array<{ label, value }>` | Missing |
 | GET | `/timezone/getTimezone` | current user's IANA timezone or null | Missing |
@@ -53,7 +53,7 @@ Paths omit this project's default `/api` global prefix.
 | Department | POST `/system/dept` | `pid,name,status,remark` | Fake success only (`.post.ts`) | Missing |
 | Department | PUT `/system/dept/:id` | `pid,name,status,remark` | Fake success only | Missing |
 | Department | DELETE `/system/dept/:id` | id | Fake success only | Missing |
-| Menu | GET `/system/menu/list` | complete menu/button tree | Yes | Missing |
+| Menu | GET `/system/menu/list` | complete menu/button tree | Yes | Implemented in M2.4 |
 | Menu | GET `/system/menu/name-exists` | query `name`, optional editing `id` | Yes | Missing |
 | Menu | GET `/system/menu/path-exists` | query `path`, optional editing `id` | Yes | Missing |
 | Menu | POST `/system/menu` | Vben menu form | **Missing** | Missing |
@@ -149,7 +149,13 @@ The fresh `sys_menu` stores only `pid`, `name`, `path`, `auth_code`, `type`, `co
 
 M2.3 publishes authenticated `GET /menu/all` at the root runtime path rather than under `/system`. Ordinary users resolve direct grants through enabled roles; enabled `super` receives all enabled menus without role-menu rows. The resolver computes the complete ancestor closure from the enabled menu set, so a directly granted route or button can make its required route parents visible. A branch is emitted only when it reaches a valid root, and buttons, missing-path nodes, disabled/missing ancestors, and cycles cannot leak into the route tree. Route objects contain only Vben runtime fields and are recursively sorted by numeric `meta.order` then globally unique `name`.
 
-`sys_role_menu` now uses bigint foreign keys, indexed columns, a unique role/menu pair, cascading role deletion, and restrictive menu deletion. This matches the fresh-table decision; no compatibility migration is provided. System-menu list, existence checks, CRUD validation, transactional writes, and cache invalidation remain later M2 batches.
+`sys_role_menu` now uses bigint foreign keys, indexed columns, a unique role/menu pair, cascading role deletion, and restrictive menu deletion. This matches the fresh-table decision; no compatibility migration is provided. Existence checks, CRUD validation, transactional writes, and cache invalidation remain later M2 batches.
+
+## Implemented system menu tree
+
+M2.4 publishes permission-protected `GET /system/menu/list`. Unlike the runtime tree, the management tree includes every non-deleted type and both numeric statuses, while projecting only the Vben contract rather than serializing entities. Bigint IDs remain strings, optional route fields and arbitrary public metadata survive, and `meta.activePath` is also emitted as the top-level compatibility field read by the v5.7.0 edit form.
+
+Fresh-table constraints should prevent missing parents, and the later write service will reject cycles. The read path is still defensive: missing/self parents become roots, and each existing cycle has one deterministic parent link broken by `meta.order` then unique `name`. This guarantees every stored record appears exactly once and JSON serialization cannot recurse forever.
 
 ## Browser security deployment model
 
