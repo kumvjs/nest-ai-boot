@@ -2,10 +2,12 @@ import type { AppConfig, SecurityConfig } from '#/config/index.js'
 import type { CacheService } from '#/shared/cache/cache.service.js'
 import type { LoginLogService } from '../system/log/services/login-log.service.js'
 import type { MenuService } from '../system/menu/menu.service.js'
-import type { UserRoleService } from '../user/user-role/user-role.service.js'
 import type { UserService } from '../user/user.service.js'
 import type { TokenService } from './services/token.service.js'
-import { authKeys } from '#/shared/cache/keys/auth.keys.js'
+import {
+  authKeys,
+  USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
+} from '#/shared/cache/keys/auth.keys.js'
 import { AuthService } from './auth.service.js'
 
 jest.mock('#/config/index.js', () => ({
@@ -15,7 +17,12 @@ jest.mock('#/config/index.js', () => ({
 
 describe('vben logout lifecycle', () => {
   const cacheService = {
+    delCache: jest.fn(),
+    getCache: jest.fn(),
     setCache: jest.fn(),
+  }
+  const menuService = {
+    getPermissionsByUserId: jest.fn(),
   }
   const tokenService = {
     removeAccessTokenByJwtUuid: jest.fn(),
@@ -28,16 +35,18 @@ describe('vben logout lifecycle', () => {
     cacheService as unknown as CacheService,
     {} as UserService,
     tokenService as unknown as TokenService,
-    {} as MenuService,
+    menuService as unknown as MenuService,
     security,
     {} as AppConfig,
     {} as LoginLogService,
-    {} as UserRoleService,
   )
 
   beforeEach(() => {
     jest.clearAllMocks()
     cacheService.setCache.mockResolvedValue(undefined)
+    cacheService.delCache.mockResolvedValue(undefined)
+    cacheService.getCache.mockResolvedValue(undefined)
+    menuService.getPermissionsByUserId.mockResolvedValue([])
     tokenService.removeAccessTokenByJwtUuid.mockResolvedValue(undefined)
     tokenService.revokeRefreshToken.mockResolvedValue(undefined)
   })
@@ -60,5 +69,60 @@ describe('vben logout lifecycle', () => {
     )
     expect(tokenService.removeAccessTokenByJwtUuid).toHaveBeenCalledWith('access-token-uuid')
     expect(tokenService.revokeRefreshToken).toHaveBeenCalledWith('refresh-token')
+  })
+
+  it('returns a cached empty permission list without querying PostgreSQL', async () => {
+    cacheService.getCache.mockResolvedValue({
+      codes: [],
+      schemaVersion: USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
+    })
+
+    await expect(service.getEffectivePermissionsByUserId('42')).resolves.toEqual([])
+
+    expect(cacheService.getCache).toHaveBeenCalledWith(authKeys.userPermissions('42'))
+    expect(menuService.getPermissionsByUserId).not.toHaveBeenCalled()
+    expect(cacheService.setCache).not.toHaveBeenCalled()
+  })
+
+  it('rebuilds a legacy unversioned permission cache during rollout', async () => {
+    cacheService.getCache.mockResolvedValue([])
+    menuService.getPermissionsByUserId.mockResolvedValue(['system:user:list'])
+
+    await expect(
+      service.getEffectivePermissionsByUserId('42'),
+    ).resolves.toEqual(['system:user:list'])
+
+    expect(menuService.getPermissionsByUserId).toHaveBeenCalledWith('42')
+    expect(cacheService.setCache).toHaveBeenCalledWith(
+      authKeys.userPermissions('42'),
+      {
+        codes: ['system:user:list'],
+        schemaVersion: USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
+      },
+    )
+  })
+
+  it('loads and caches effective permissions after a Redis miss', async () => {
+    cacheService.getCache.mockResolvedValue(undefined)
+    menuService.getPermissionsByUserId.mockResolvedValue(['system:user:list'])
+
+    await expect(
+      service.getEffectivePermissionsByUserId('42'),
+    ).resolves.toEqual(['system:user:list'])
+
+    expect(menuService.getPermissionsByUserId).toHaveBeenCalledWith('42')
+    expect(cacheService.setCache).toHaveBeenCalledWith(
+      authKeys.userPermissions('42'),
+      {
+        codes: ['system:user:list'],
+        schemaVersion: USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
+      },
+    )
+  })
+
+  it('invalidates the targeted user permission cache', async () => {
+    await service.invalidatePermissionsCache('42')
+
+    expect(cacheService.delCache).toHaveBeenCalledWith(authKeys.userPermissions('42'))
   })
 })

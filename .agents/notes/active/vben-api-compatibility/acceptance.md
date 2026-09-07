@@ -57,3 +57,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Access tokens, password fields, entity relations, and audit columns are excluded from the response DTO.
 - [x] The compiled migration discovery path matches Nest's actual `dist/src/migrations` output.
 - [x] Focused DTO/migration tests, test type-checking, lint, and Nest build pass; applying the migration to a live PostgreSQL database remains an environment deployment step.
+
+## Completed batch: M1.4
+
+- [x] `/auth/codes` returns effective menu/button permission codes rather than role codes, still wrapped by `ResOp<string[]>`.
+- [x] Normal users receive codes only from enabled assigned roles and enabled menu/button records; comma-separated values are trimmed, empty values removed, duplicates removed, and results sorted deterministically.
+- [x] A user with the enabled `super` role receives every enabled menu/button permission code without requiring explicit role-menu mappings.
+- [x] Version-matching Redis permission-cache hits, including an empty `codes` array, do not query PostgreSQL; misses and legacy unversioned values load and repopulate the cache.
+- [x] `RbacGuard` and `/auth/codes` use the same cache-backed effective-permission resolver.
+- [x] A targeted permission-cache invalidation API exists for later menu/role/user transaction hooks, and its behavior is tested.
+- [x] Swagger, current RBAC/Vben docs, focused tests, type-checking, lint, Nest build, contract parser tests, and locked Vben fixtures are updated and verified.

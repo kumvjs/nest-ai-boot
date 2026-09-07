@@ -14,6 +14,7 @@ jest.mock('#/config/index.js', () => ({
 describe('vben authentication contract', () => {
   const authService = {
     clearLoginStatus: jest.fn(),
+    getEffectivePermissionsByUserId: jest.fn(),
     login: jest.fn(),
     refreshToken: jest.fn(),
   }
@@ -123,5 +124,21 @@ describe('vben authentication contract', () => {
       reply as unknown as FastifyReply,
     )).rejects.toThrow('storage unavailable')
     expect(reply.clearCookie).toHaveBeenCalledWith('refresh_token')
+  })
+
+  it('returns effective menu/button codes inside the canonical ResOp envelope', async () => {
+    authService.getEffectivePermissionsByUserId.mockResolvedValue([
+      'system:user:list',
+      'system:user:update',
+    ])
+
+    const data = await controller.codes({ uid: '42' } as LoginUserContext)
+
+    expect(authService.getEffectivePermissionsByUserId).toHaveBeenCalledWith('42')
+    expect(ResOp.success(data)).toMatchObject({
+      code: 0,
+      data: ['system:user:list', 'system:user:update'],
+      success: true,
+    })
   })
 })

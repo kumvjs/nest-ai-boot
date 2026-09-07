@@ -5,11 +5,13 @@ import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
 import { BusinessException } from '#/common/exceptions/business.exception.js'
 import { APP_CONFIG, securityConfig } from '#/config/index.js'
 import { CacheService } from '#/shared/cache/cache.service.js'
-import { authKeys } from '#/shared/cache/keys/auth.keys.js'
+import {
+  authKeys,
+  USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
+} from '#/shared/cache/keys/auth.keys.js'
 import { generateUUID } from '#/utils/index.js'
 import { LoginLogService } from '../system/log/services/login-log.service.js'
 import { MenuService } from '../system/menu/menu.service.js'
-import { UserRoleService } from '../user/user-role/user-role.service.js'
 import { UserService } from '../user/user.service.js'
 import { TokenService } from './services/token.service.js'
 
@@ -23,7 +25,6 @@ export class AuthService {
     @Inject(securityConfig.KEY) private securityConfig: SecurityConfig,
     @Inject(APP_CONFIG.KEY) private appConfig: AppConfig,
     private loginLogService: LoginLogService,
-    private readonly userRoleService: UserRoleService,
   ) { }
 
   async validateUser(credential: string, password: string): Promise<any> {
@@ -124,21 +125,37 @@ export class AuthService {
     return this.menuService.getPermissionsByUserId(userId)
   }
 
-  async setPermissionsCache(userId: string, permissions: string[]): Promise<void> {
-    await this.cacheService.setCache(authKeys.userPermissions(userId), permissions)
+  async setPermissionsCache(userId: string | number, permissions: string[]): Promise<void> {
+    await this.cacheService.setCache(authKeys.userPermissions(userId), {
+      codes: permissions,
+      schemaVersion: USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
+    })
   }
 
-  async getPermissionsCache(userId: number): Promise<string[]> {
-    const permissionString = await this.cacheService.getCache(authKeys.userPermissions(userId))
-    return permissionString || []
-  }
-
-  async codes(userId: string) {
-    const u = await this.userService.getUserById(userId)
-    if (!u) {
-      throw new BusinessException(ERROR_CODES.USER_NOT_FOUND)
+  async getPermissionsCache(userId: string | number): Promise<string[] | undefined> {
+    const permissions = await this.cacheService.getCache(authKeys.userPermissions(userId))
+    if (
+      !permissions
+      || permissions.schemaVersion !== USER_PERMISSIONS_CACHE_SCHEMA_VERSION
+      || !Array.isArray(permissions.codes)
+      || !permissions.codes.every(code => typeof code === 'string')
+    ) {
+      return undefined
     }
-    const roleCodes = await this.userRoleService.getUserRoleCodes(userId)
-    return [u?.role, ...roleCodes]
+    return permissions.codes
+  }
+
+  async getEffectivePermissionsByUserId(userId: string): Promise<string[]> {
+    const cachedPermissions = await this.getPermissionsCache(userId)
+    if (cachedPermissions !== undefined)
+      return cachedPermissions
+
+    const permissions = await this.getPermissionsByUserId(userId)
+    await this.setPermissionsCache(userId, permissions)
+    return permissions
+  }
+
+  async invalidatePermissionsCache(userId: string | number): Promise<void> {
+    await this.cacheService.delCache(authKeys.userPermissions(userId))
   }
 }

@@ -111,6 +111,7 @@ export async function apiRequest<F extends (...args: any[]) => Promise<any>>(
 
 ```ts
 import {
+  authControllerCodes,
   authControllerLogin,
   authControllerRefresh,
   userControllerInfo,
@@ -124,7 +125,8 @@ const loginResult = await apiRequest(authControllerLogin, {
 accessStore.setAccessToken(loginResult.accessToken)
 
 const userInfo = await apiRequest(userControllerInfo)
-console.log(userInfo.userId, userInfo.roles)
+const accessCodes = await apiRequest(authControllerCodes)
+console.log(userInfo.userId, userInfo.roles, accessCodes)
 ```
 
 刷新接口同样返回 `ResOp<{ accessToken }>`，不要为它创建“裸字符串”特例：
@@ -176,7 +178,7 @@ Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，�
 | --- | --- | --- |
 | 登录 | `POST /auth/login` | body 为 `username`、`password`；返回 `data.accessToken` |
 | 当前用户 | `GET /user/info` | 返回 `userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 和 `roles` |
-| 权限码 | `GET /auth/codes` | 当前返回角色 code，而非菜单 permission |
+| 权限码 | `GET /auth/codes` | 返回当前用户有效的菜单/按钮 permission code 数组 |
 | 刷新令牌 | `POST /auth/refresh` | Refresh Token 来自 HttpOnly Cookie，成功后轮换 Cookie |
 | 退出 | `POST /auth/logout` | Access Token 进入黑名单，并撤销/清除 Refresh Token |
 | 动态菜单 | 未实现 | 菜单实体存在，Controller 无接口 |
@@ -202,13 +204,15 @@ tokenStore.setAccessToken(result.accessToken)
 
 ### 权限语义
 
-后端细粒度权限来自 `sys_menu.permission`，但 `/auth/codes` 返回的是 `user.roleCodes`。若 Vben 的按钮权限使用 permission code，应让该接口返回菜单权限，或在前端明确将其作为角色码处理。
+后端细粒度权限来自 `sys_menu.permission`。`/auth/codes` 与后端 `RbacGuard` 使用同一套 Redis 缓存和 PostgreSQL 回源逻辑，只返回启用角色关联的启用菜单/按钮权限码；启用的 `super` 角色返回全部启用权限码。角色 code 与权限 code 不混用，角色身份从 `/user/info.roles` 获取。
+
+菜单、角色或用户授权发生变化后，后端写服务必须在事务提交后失效受影响用户的权限缓存。当前已提供按用户失效能力，具体写接口将在对应系统管理批次接入。
 
 ### 尚缺接口
 
 - 动态菜单 / 路由树；
 - 菜单、角色、用户的完整 CRUD；
-- 用户状态、密码修改和权限缓存主动失效流程；
+- 用户状态、密码修改，以及菜单/角色/用户写操作中的权限缓存失效挂钩；
 - 文件上传等 Vben 常用管理接口。
 
 建议先固定 Vben 所用版本及其 mock API 契约，再以契约测试逐个补齐，避免仅凭路径名称适配。

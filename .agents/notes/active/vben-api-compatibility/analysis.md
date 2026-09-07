@@ -84,7 +84,7 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 ## Contract gaps in the existing backend
 
 - Official Vben v5.7.0 uses a bare `baseRequestClient` for refresh and its mock returns a raw token. This project intentionally does not copy that exception: the backend keeps `ResOp<{ accessToken }>` and the project frontend's Hey API/OpenAPI wrapper plus `defaultResponseInterceptor` unwraps the `data` field. Contract tests must protect this project-specific adapter boundary.
-- `/auth/codes` returns login-context role codes, while Vben expects action/button codes. The database source should be effective menu permissions.
+- `/auth/codes` now returns cache-backed effective menu/button permission codes. Enabled ordinary roles contribute enabled assigned menu/button codes; enabled `super` receives all enabled codes. Role identities remain in `/user/info.roles`.
 - `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated DTO, and M1.3 added persistent avatar, home-path, and description fields. The adapter now returns only `userId`, `username`, `realName`, `avatar`, `homePath`, `desc`, and `roles`; it deliberately does not echo an Access Token.
 - `nestjs-paginate` returns a shape like `{ data, meta, links }`; Vben system tables expect unwrapped `{ items, total }` and use `page/pageSize`.
 - Existing `sys_menu` lacks the complete five-type Vben model and extensible route metadata.
@@ -134,3 +134,7 @@ The scheduled main warning is advisory: it can fail visibly, but it cannot updat
 ## Implemented refresh lifecycle
 
 M1.2 keeps the existing JWT and Redis model but closes the refresh replay window. After signature/cache/database/expiry checks, one PostgreSQL `DELETE ... WHERE value = ?` is the single-use consumption point. Only a request whose delete affects exactly one row may create the replacement Refresh Token and Access Token. Logout now passes the HttpOnly cookie into the established login-state cleanup, revokes its PostgreSQL/Redis state, and clears it from the browser.
+
+## Implemented effective permission resolution
+
+M1.4 makes `/auth/codes` and `RbacGuard` use the same cache-backed resolver. A version-matching cached empty `codes` array is a real hit; missing, invalid, unknown-version, and legacy raw-array values trigger a PostgreSQL query and cache refill. This lazy cache-schema migration prevents forever-cached pre-M1.4 permissions from retaining the old filtering semantics. Permission rows are restricted to enabled roles and enabled menu/button records, then comma-separated values are trimmed, stripped of empty entries, deduplicated, and sorted. Enabled `super` role assignments load every enabled menu/button permission code. A targeted invalidation method is available for the transaction-after-commit hooks required by M2, M4, and M5.

@@ -25,6 +25,10 @@
 
 缓存 key 按用途拆分在 `src/shared/cache/keys`，覆盖用户信息、用户权限、Access / Refresh Token、黑名单、密码版本与在线状态。
 
+用户权限缓存使用 `auth:user:permissions:<userId>`，值中包含 `schemaVersion` 和 `codes`。`/auth/codes` 与 `RbacGuard` 共享同一个缓存回源入口：Redis 未命中时从角色菜单关系加载并回填，版本匹配且 `codes` 为空数组代表用户确实没有权限，不能被误判为未命中。旧版无版本数组或未知版本会惰性回源并覆盖，不要求发布时全量清 Redis；未来权限缓存结构或授权语义变化时必须递增 schema 版本。
+
+`AuthService.invalidatePermissionsCache(userId)` 用于定向删除；菜单、角色和用户授权写服务必须在数据库事务成功提交后调用，避免回滚事务提前清除缓存或继续使用旧权限。
+
 ## 审计与日志
 
 HTTP traceId 通过 `AsyncLocalStorage` 在请求链路中传递。登录成功后会记录 IP、User-Agent 和 IP 地址解析结果；地址解析失败不会阻断登录。TypeORM 使用自定义 Logger 输出数据库日志。

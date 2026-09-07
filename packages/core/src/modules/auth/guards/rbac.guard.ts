@@ -55,12 +55,11 @@ export class RbacGuard implements CanActivate {
     if (!payloadPermission)
       return true
 
-    if (loginUser.user?.role === Roles.SUPER)
+    if (loginUser.roleCodes.includes(Roles.SUPER))
       return true
 
     // 核心逻辑：检查权限（HTTP 和 WS 完全一样）
-    const allPermissions = await this.authService.getPermissionsCache(Number(loginUser.uid))
-      ?? await this.authService.getPermissionsByUserId(loginUser.uid)
+    const allPermissions = await this.authService.getEffectivePermissionsByUserId(loginUser.uid)
 
     let canNext = false
 

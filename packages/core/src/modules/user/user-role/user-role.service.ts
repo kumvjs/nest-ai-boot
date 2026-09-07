@@ -27,6 +27,7 @@ export class UserRoleService {
     // 只选择中间表的 id 和 role 的 code，避免 select *
       .select(['userRole.id', 'role.code'])
       .where('userRole.userId = :userId', { userId })
+      .andWhere('role.status = :status', { status: true })
       .getMany()
 
     return userRoles.map(ur => ur.role?.code).filter(Boolean)

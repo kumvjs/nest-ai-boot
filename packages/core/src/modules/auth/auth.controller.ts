@@ -88,7 +88,8 @@ export class AuthController {
   @Get('codes')
   @ApiSecurityAuth()
   @ApiOperation({ summary: '获取用户的权限码' })
+  @ApiResult({ type: [String] })
   async codes(@CurrentUser() user: LoginUserContext) {
-    return user.roleCodes
+    return this.authService.getEffectivePermissionsByUserId(user.uid)
   }
 }

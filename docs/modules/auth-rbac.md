@@ -30,7 +30,9 @@ sys_user ──< sys_user_role >── sys_role
                                   └──< sys_role_menu >── sys_menu.permission
 ```
 
-`sys_menu.permission` 可保存逗号分隔权限码。用户登录时，系统按角色查询权限并写入 Redis。`RbacGuard` 读取 `@RequirePermissions()` 元数据；数组权限使用“全部满足”语义。`super` 用户绕过权限码检查。
+`sys_menu.permission` 可保存逗号分隔权限码。有效权限只来自启用角色关联的启用菜单或按钮；返回前会拆分、去空、去重并稳定排序。启用的 `super` 角色不要求建立逐项角色菜单关联，而是获得全部启用菜单/按钮权限码，和后端守卫的超级用户放行语义保持一致。守卫只根据启用角色关系生成的 `roleCodes` 判断 `super`，不会信任 `sys_user.role` 的旧冗余值。
+
+用户登录时，系统按数据库最新状态查询权限并写入带 schema 版本的 Redis 缓存。后续 `/auth/codes` 与 `RbacGuard` 共用缓存回源逻辑：版本匹配的命中（包括空 `codes`）直接使用，旧版或未命中值查询 PostgreSQL 并回填。`invalidatePermissionsCache(userId)` 提供按用户失效入口；后续菜单、角色和用户授权写操作必须在事务提交后调用。`RbacGuard` 读取 `@RequirePermissions()` 元数据，数组权限使用“全部满足”语义。
 
 ```ts
 @RequirePermissions('system:user:list')
@@ -46,8 +48,9 @@ review() {}
 
 ## 当前完成度
 
-- 用户信息、角色码查询和用户分页列表已有接口。
-- 角色、菜单实体与权限查询服务已经存在。
+- 用户信息、有效权限码查询和用户分页列表已有接口。
+- `/auth/codes` 返回菜单/按钮 permission 数组，不返回角色 code；角色身份仍由 `/user/info.roles` 表达。
+- 角色、菜单实体、权限查询服务和按用户缓存失效入口已经存在。
 - 角色和菜单 Controller 尚无 CRUD 路由。
 - DTO 已预留，但用户、角色、菜单完整管理流程尚未实现。
-- `/auth/codes` 实际返回 `roleCodes`，不是菜单 permission 列表；Vben 对接时需按前端语义确认。
+- 权限写接口尚未实现；后续实现必须在数据库事务提交后失效受影响用户的权限缓存。
