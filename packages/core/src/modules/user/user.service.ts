@@ -53,6 +53,9 @@ export class UserService {
     const u = await this.getUserById(id)
     const roles = await this.userRoleService.getUserRoleCodes(id)
     return {
+      avatar: u.avatar ?? '',
+      desc: u.description ?? '',
+      homePath: u.homePath ?? '',
       userId: u.id,
       username: u.username,
       realName: u.nickname,

@@ -175,7 +175,7 @@ Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，�
 | Vben 场景 | 当前接口 | 说明 |
 | --- | --- | --- |
 | 登录 | `POST /auth/login` | body 为 `username`、`password`；返回 `data.accessToken` |
-| 当前用户 | `GET /user/info` | 返回 `userId`、`username`、`realName` 和 `roles` |
+| 当前用户 | `GET /user/info` | 返回 `userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 和 `roles` |
 | 权限码 | `GET /auth/codes` | 当前返回角色 code，而非菜单 permission |
 | 刷新令牌 | `POST /auth/refresh` | Refresh Token 来自 HttpOnly Cookie，成功后轮换 Cookie |
 | 退出 | `POST /auth/logout` | Access Token 进入黑名单，并撤销/清除 Refresh Token |

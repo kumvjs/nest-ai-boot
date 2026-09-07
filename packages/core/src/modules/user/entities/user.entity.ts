@@ -30,6 +30,18 @@ export class SysUserEntity extends CommonEntity {
   @ApiProperty({ description: '昵称' })
   nickname: string
 
+  @Column({ length: 500, nullable: true })
+  @ApiProperty({ description: '头像 URL', nullable: true, required: false })
+  avatar?: string | null
+
+  @Column({ length: 255, name: 'home_path', nullable: true })
+  @ApiProperty({ description: '登录后首页路径', nullable: true, required: false })
+  homePath?: string | null
+
+  @Column({ length: 500, nullable: true })
+  @ApiProperty({ description: '用户描述', nullable: true, required: false })
+  description?: string | null
+
   @Column({
     type: 'boolean',
     default: false,

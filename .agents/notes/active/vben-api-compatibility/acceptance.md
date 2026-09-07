@@ -48,3 +48,12 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Malformed logout cookies are deleted by opaque value without trusting an invalid JWT payload.
 - [x] The Vben integration guide includes the Swagger → OpenAPI-TS → `apiClient` generation, unwrapping, login, user-info, and refresh path.
 - [x] Four focused Jest suites (11 tests), test type-checking, lint, Nest build, contract fixtures, and Markdown diff checks pass; the VitePress build is unverified because documentation dependencies are not installed locally.
+
+## Completed batch: M1.3
+
+- [x] `sys_user` persists nullable avatar URL, home path, and description through a reversible TypeORM migration.
+- [x] `/user/info` returns explicit `userId`, `username`, `realName`, `avatar`, `homePath`, `desc`, and `roles` fields inside `ResOp`.
+- [x] Existing NULL profile values normalize to empty strings without inventing a URL or route.
+- [x] Access tokens, password fields, entity relations, and audit columns are excluded from the response DTO.
+- [x] The compiled migration discovery path matches Nest's actual `dist/src/migrations` output.
+- [x] Focused DTO/migration tests, test type-checking, lint, and Nest build pass; applying the migration to a live PostgreSQL database remains an environment deployment step.

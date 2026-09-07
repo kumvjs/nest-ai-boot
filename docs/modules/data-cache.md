@@ -11,6 +11,8 @@
 
 主要表包括用户、角色、菜单、用户角色、角色菜单、Refresh Token、登录日志和验证码日志。软删除由 `deleted_at` 表示。
 
+`sys_user` 的 Vben 资料字段包含可空的 `avatar`、`home_path` 和 `description`。`/user/info` 在 DTO 边界分别映射为 `avatar`、`homePath` 和 `desc`；历史用户的 NULL 值返回空字符串。
+
 ## Redis 缓存
 
 `CacheService` 为 Redis 提供类型化 key 与 JSON 序列化封装。`getOrSet()` 同时处理常见缓存风险：

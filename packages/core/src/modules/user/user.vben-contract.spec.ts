@@ -27,6 +27,9 @@ describe('vben current-user contract', () => {
   it('maps the entity to a dedicated Vben DTO without exposing internal fields', async () => {
     userRepository.findOne.mockResolvedValue({
       createdAt: new Date('2026-09-07T00:00:00.000Z'),
+      avatar: 'https://cdn.example.test/avatar.png',
+      description: 'System administrator',
+      homePath: '/workspace',
       id: '9007199254740993',
       nickname: 'Administrator',
       password_hash: 'must-not-leak',
@@ -40,6 +43,9 @@ describe('vben current-user contract', () => {
     const data = await controller.info({ uid: '9007199254740993' } as LoginUserContext)
 
     expect(data).toEqual({
+      avatar: 'https://cdn.example.test/avatar.png',
+      desc: 'System administrator',
+      homePath: '/workspace',
       realName: 'Administrator',
       roles: ['super'],
       userId: '9007199254740993',
@@ -51,12 +57,39 @@ describe('vben current-user contract', () => {
     expect(ResOp.success(data)).toMatchObject({
       code: 0,
       data: {
+        avatar: 'https://cdn.example.test/avatar.png',
+        desc: 'System administrator',
+        homePath: '/workspace',
         realName: 'Administrator',
         roles: ['super'],
         userId: '9007199254740993',
         username: 'admin',
       },
       success: true,
+    })
+  })
+
+  it('normalizes nullable persisted profile fields without inventing a route or URL', async () => {
+    userRepository.findOne.mockResolvedValue({
+      avatar: null,
+      description: null,
+      homePath: null,
+      id: '42',
+      nickname: 'User',
+      role: 'user',
+      status: true,
+      username: 'user',
+    })
+    userRoleService.getUserRoleCodes.mockResolvedValue(['user'])
+
+    await expect(controller.info({ uid: '42' } as LoginUserContext)).resolves.toEqual({
+      avatar: '',
+      desc: '',
+      homePath: '',
+      realName: 'User',
+      roles: ['user'],
+      userId: '42',
+      username: 'user',
     })
   })
 })

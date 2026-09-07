@@ -15,7 +15,7 @@ export const dataSourceOptions: DataSourceOptions = {
   schema: process.env.TYPEORM_SCHEMA,
   synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
   entities: ['dist/**/*.entity{.js,.ts}'],
-  migrations: ['dist/migrations/*{.js,.ts}'],
+  migrations: ['dist/src/migrations/*{.js,.ts}'],
 }
 // console.log(dataSourceOptions)
 export const databaseConfig = registerAs(

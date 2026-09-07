@@ -85,7 +85,7 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 
 - Official Vben v5.7.0 uses a bare `baseRequestClient` for refresh and its mock returns a raw token. This project intentionally does not copy that exception: the backend keeps `ResOp<{ accessToken }>` and the project frontend's Hey API/OpenAPI wrapper plus `defaultResponseInterceptor` unwraps the `data` field. Contract tests must protect this project-specific adapter boundary.
 - `/auth/codes` returns login-context role codes, while Vben expects action/button codes. The database source should be effective menu permissions.
-- `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated response DTO with `userId`, `username`, `realName`, and `roles`; avatar, home-path, and description remain pending until they have an approved persistence source.
+- `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated DTO, and M1.3 added persistent avatar, home-path, and description fields. The adapter now returns only `userId`, `username`, `realName`, `avatar`, `homePath`, `desc`, and `roles`; it deliberately does not echo an Access Token.
 - `nestjs-paginate` returns a shape like `{ data, meta, links }`; Vben system tables expect unwrapped `{ items, total }` and use `page/pageSize`.
 - Existing `sys_menu` lacks the complete five-type Vben model and extensible route metadata.
 - Existing role/menu services and controllers are partial; all writes need transactional relationship replacement and cache invalidation.

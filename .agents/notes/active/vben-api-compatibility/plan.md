@@ -18,7 +18,7 @@ Acceptance: the same commit always generates the same normalized contract; a rou
 
 - [x] Add Vben v5.7.0-derived contract tests for existing `/auth/login`, `/auth/refresh`, `/auth/logout`, and `/user/info`; assert the project's canonical `ResOp<T>` envelope and do not rewrite working login logic.
 - [x] Verify/fix refresh behavior through the generated OpenAPI client contract `ResOp<{ accessToken }>`, including token rotation, replay rejection, cookie replacement, and logout invalidation; never introduce a raw-response exception.
-- [ ] Add a dedicated `/user/info` response DTO mapping `id -> userId` and compatible profile fields; stop exposing `SysUserEntity` as the public contract.
+- [x] Add a dedicated `/user/info` response DTO mapping `id -> userId` and compatible profile fields; stop exposing `SysUserEntity` as the public contract.
 - [ ] Change `/auth/codes` from role codes to effective menu/button permission codes and align Redis permission-cache invalidation.
 - [ ] Define environment-specific CORS origin, HTTPS, SameSite, Secure, Domain, and CSRF behavior for credentialed requests.
 - [ ] Verify disabled users cannot log in and password hashing is scheduled for Argon2id/bcrypt migration rather than copied from the current MD5 approach.
@@ -64,7 +64,7 @@ Acceptance: role CRUD and permission assignment are transactional, protected rol
 ## M5 — User management
 
 - [ ] Resolve the contract decision: recommended `roleIds` with existing RBAC; if exact upstream `permissions` is retained, approve direct-user-grant storage and union/override semantics first.
-- [ ] Extend user/profile persistence for department, avatar, home path, description, timezone, and remark as approved.
+- [ ] Extend user/profile persistence for department, timezone, remark, and any remaining approved fields; reuse the M1 avatar, home-path, and description columns.
 - [ ] Adapt `GET /system/user/list` from `nestjs-paginate` output to `{ items,total }` and accept Vben `page/pageSize` filters including `deptId` and time range.
 - [ ] Implement `POST /system/user`, `PUT /system/user/:id`, and `DELETE /system/user/:id` with DTOs separate from entities.
 - [ ] Implement transactional role assignment and targeted permission/session-cache invalidation.
