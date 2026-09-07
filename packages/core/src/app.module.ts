@@ -4,12 +4,13 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { CatchEverythingFilter } from './common/filters/catch-everything.filter.js'
 import { TransformInterceptor } from './common/interceptors/transform.interceptor.js'
 import { TraceMiddleware } from './common/middleware/trace.middleware.js'
-import config from './config/index.js'
 import { envValidationSchema } from './config/env.validation.js'
+import config from './config/index.js'
 import { AiModule } from './modules/ai/ai.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js'
 import { RbacGuard } from './modules/auth/guards/rbac.guard.js'
+import { TrustedOriginGuard } from './modules/auth/guards/trusted-origin.guard.js'
 import { SystemModule } from './modules/system/system.module.js'
 import { UserModule } from './modules/user/user.module.js'
 import { WebsocketModule } from './modules/websocket/websocket.module.js'
@@ -41,6 +42,7 @@ import { SharedModule } from './shared/shared.module.js'
 
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
 
+    { provide: APP_GUARD, useClass: TrustedOriginGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RbacGuard },
   ],

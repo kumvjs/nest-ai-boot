@@ -20,7 +20,7 @@ Acceptance: the same commit always generates the same normalized contract; a rou
 - [x] Verify/fix refresh behavior through the generated OpenAPI client contract `ResOp<{ accessToken }>`, including token rotation, replay rejection, cookie replacement, and logout invalidation; never introduce a raw-response exception.
 - [x] Add a dedicated `/user/info` response DTO mapping `id -> userId` and compatible profile fields; stop exposing `SysUserEntity` as the public contract.
 - [x] Change `/auth/codes` from role codes to effective menu/button permission codes and align Redis permission-cache invalidation.
-- [ ] Define environment-specific CORS origin, HTTPS, SameSite, Secure, Domain, and CSRF behavior for credentialed requests.
+- [x] Define environment-specific CORS origin, HTTPS, SameSite, Secure, Domain, and CSRF behavior for credentialed requests.
 - [ ] Verify disabled users cannot log in and password hashing is scheduled for Argon2id/bcrypt migration rather than copied from the current MD5 approach.
 
 Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI client can log in, unwrap `ResOp`, load user data/codes, refresh once with rotation, reject refresh replay, and log out.

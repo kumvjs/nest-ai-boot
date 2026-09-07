@@ -170,7 +170,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，并把 `data` 作为业务结果。HTTP 401 用于无效 / 缺失 / 过期 Refresh Token，HTTP 403 用于权限不足；业务错误还需读取响应体 `code`。
+Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，并把 `data` 作为业务结果。HTTP 401 用于无效 / 缺失 / 过期 Refresh Token；HTTP 403 用于权限不足或浏览器 Origin 不受信任；业务错误还需读取响应体 `code`。
 
 ## 登录流程映射
 
@@ -198,9 +198,11 @@ tokenStore.setAccessToken(result.accessToken)
 
 ### CORS 与 Cookie
 
-后端当前配置为 `origin: '*'` 与 `credentials: true`，浏览器不允许凭据请求使用通配符来源。Refresh Token Cookie 又固定为 `secure: true`、`sameSite: 'strict'`，因此普通 HTTP 本地开发以及跨站部署可能无法写入或发送 Cookie。
+后端通过 `APP_CORS_ORIGINS` 使用精确 Origin 白名单，不再把 `credentials: true` 与通配符来源组合。默认本地配置支持 Vben 的 `http://localhost:5999` 和 playground 的 `http://localhost:5555`；使用其他端口时需要加入完整 Origin。
 
-联调前应把 CORS origin 改成明确的 Vben 地址，并根据同站 / 跨站与 HTTPS 部署方式配置 Cookie。不要为了方便把 Refresh Token 暴露给 JavaScript。
+本地默认 Refresh Token Cookie 为 host-only、`Secure=false`、`SameSite=Lax`，Path 限制为 `/api/auth`（全局前缀变化时同步变化）。生产环境要求公开 API 和前端 Origin 均为 HTTPS，并强制 Secure Cookie。不要为了方便把 Refresh Token 暴露给 JavaScript。
+
+同站子域部署通常保留 `SameSite=Lax` 即可。只有前后端确实属于不同站点时，才设置 `AUTH_COOKIE_SAME_SITE=none` 与 `AUTH_COOKIE_SECURE=true`；此时必须把前端准确 Origin 加入白名单。后端会在所有非安全浏览器请求进入认证和业务逻辑之前校验 Origin，非白名单来源返回 HTTP 403。
 
 ### 权限语义
 

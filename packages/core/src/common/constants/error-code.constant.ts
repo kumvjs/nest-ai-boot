@@ -65,6 +65,11 @@ export const ERROR_CODES = {
     message: 'refreshToken 缺失',
     httpStatus: HttpStatus.UNAUTHORIZED,
   },
+  AUTH_ORIGIN_FORBIDDEN: {
+    code: 10010,
+    message: '请求来源不受信任',
+    httpStatus: HttpStatus.FORBIDDEN,
+  },
 
   // ─── 用户模块 (20xxx) ────────────────────
 

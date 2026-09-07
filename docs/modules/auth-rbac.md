@@ -19,8 +19,10 @@ JWT 校验还会检查：
 - 单端登录模式启用时，是否为当前有效 Token（当前配置固定允许多端登录）。
 
 ::: warning 当前安全边界
-登录代码没有检查用户 `status`；图片验证码校验被注释；密码哈希使用 MD5；Cookie 固定 `secure: true` 与 `sameSite: strict`。上线前应完成账号状态校验，改用 Argon2 / bcrypt，并按部署域名设计 Cookie 与 CSRF 策略。
+登录代码没有检查用户 `status`；图片验证码校验被注释；密码哈希使用 MD5。上线前仍需完成账号状态校验并迁移到 Argon2id / bcrypt。
 :::
+
+浏览器安全配置按环境管理：凭据 CORS 使用精确 Origin，生产要求 HTTPS 与 Secure Cookie，Cookie Domain 默认不设置，SameSite 可按同站/跨站部署选择。全局可信 Origin 守卫在 JWT 和业务逻辑之前拒绝来自非白名单 Origin 的非安全方法；没有 Origin 的 CLI/服务间调用不受影响。
 
 ## RBAC 数据模型
 

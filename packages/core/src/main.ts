@@ -9,8 +9,13 @@ import { fastifyApp } from './common/adapters/fastify.adapter.js'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js'
 // import { setupAsyncApi } from './common/setup/setup-asyncapi.js'
 import { setupSwagger } from './common/setup/setup-swagger.js'
-import { setupWsSwagger } from './common/setup/setup-ws-swagger.js'
-import { APP_CONFIG, AppConfig, isMainProcess, isProd } from './config/index.js'
+import {
+  APP_CONFIG,
+  AppConfig,
+  BROWSER_SECURITY_CONFIG,
+  BrowserSecurityConfig,
+  isMainProcess,
+} from './config/index.js'
 import { LoggerService } from './shared/logger/logger.service.js'
 
 declare const module: any
@@ -26,6 +31,10 @@ async function bootstrap() {
     { strict: false },
   )
   const { port, globalPrefix } = appConfig
+  const browserSecurity = app.get<BrowserSecurityConfig>(
+    BROWSER_SECURITY_CONFIG.KEY,
+    { strict: false },
+  )
   console.error(`[BOOT] config loaded port=${port} prefix=${globalPrefix}`)
 
   // class-validator 的 DTO 类中注入 nest 容器的依赖 (用于自定义验证器)
@@ -33,7 +42,7 @@ async function bootstrap() {
 
   // 允许跨域
   app.enableCors({
-    origin: '*',
+    origin: browserSecurity.allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // 明确允许方法
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'], // 按需配置允许的请求头

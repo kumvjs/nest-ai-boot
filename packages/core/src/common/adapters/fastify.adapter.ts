@@ -45,11 +45,6 @@ app.register(FastifyCookie, {
 // `NestFastifyApplication` interface exposes `getHttpAdapter()`, while
 // `getInstance()` belongs to the adapter itself (not the Nest application).
 app.getHttpAdapter().getInstance().addHook('onRequest', (request, reply, done) => {
-  // set undefined origin
-  const { origin } = request.headers
-  if (!origin)
-    request.headers.origin = request.headers.host
-
   // forbidden php
 
   const { url } = request

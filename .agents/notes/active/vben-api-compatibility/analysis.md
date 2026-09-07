@@ -138,3 +138,9 @@ M1.2 keeps the existing JWT and Redis model but closes the refresh replay window
 ## Implemented effective permission resolution
 
 M1.4 makes `/auth/codes` and `RbacGuard` use the same cache-backed resolver. A version-matching cached empty `codes` array is a real hit; missing, invalid, unknown-version, and legacy raw-array values trigger a PostgreSQL query and cache refill. This lazy cache-schema migration prevents forever-cached pre-M1.4 permissions from retaining the old filtering semantics. Permission rows are restricted to enabled roles and enabled menu/button records, then comma-separated values are trimmed, stripped of empty entries, deduplicated, and sorted. Enabled `super` role assignments load every enabled menu/button permission code. A targeted invalidation method is available for the transaction-after-commit hooks required by M2, M4, and M5.
+
+## Browser security deployment model
+
+M1.5 replaces credentialed wildcard CORS and fixed Cookie attributes with one environment-backed browser-security configuration. Local/development defaults cover the locked Vben playground (`5555`) and Ant Design Vue app (`5999`); production requires explicit HTTPS origins and an HTTPS public API URL. Refresh Cookies are host-only by default, scoped to the API auth path, Secure in production, and SameSite=Lax unless explicitly changed. Cross-site SameSite=None is valid only with Secure enabled.
+
+CORS alone does not prevent a cross-site form from causing a state change, so a global guard validates the exact browser Origin for every non-safe HTTP method before JWT and business guards. Trusted configured origins pass; unknown origins receive HTTP 403. Requests without Origin remain supported for CLI and service-to-service clients. Login, rotation, and clearing all use the same Cookie path/domain/security attributes.

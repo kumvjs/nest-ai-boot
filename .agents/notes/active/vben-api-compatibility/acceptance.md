@@ -67,3 +67,12 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] `RbacGuard` and `/auth/codes` use the same cache-backed effective-permission resolver.
 - [x] A targeted permission-cache invalidation API exists for later menu/role/user transaction hooks, and its behavior is tested.
 - [x] Swagger, current RBAC/Vben docs, focused tests, type-checking, lint, Nest build, contract parser tests, and locked Vben fixtures are updated and verified.
+
+## Completed batch: M1.5
+
+- [x] Local/development CORS defaults allow the locked Vben playground and Ant Design Vue app origins without using a credentialed wildcard; production requires an explicit HTTPS origin list.
+- [x] Production requires an HTTPS public API URL and a Secure Refresh Token Cookie; `SameSite=None` is rejected unless Secure is enabled.
+- [x] Refresh Cookie options are centralized, host-only by default, scoped to the API auth path, configurable for SameSite/Domain, and applied identically on login, refresh, and logout clearing.
+- [x] Unsafe browser requests with an untrusted `Origin` receive HTTP 403 before authentication/business logic; trusted origins, preflight/safe methods, and non-browser requests without Origin remain supported.
+- [x] The Fastify adapter no longer fabricates an Origin header when clients omit it.
+- [x] Environment validation, controller Cookie contracts, trusted-origin behavior, docs, type-checking, lint, Nest build, contract parser tests, and locked Vben fixtures pass.

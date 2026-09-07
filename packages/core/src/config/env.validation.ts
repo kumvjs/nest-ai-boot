@@ -1,4 +1,5 @@
 import Joi from 'joi'
+import { parseAllowedOrigins } from './browser-security.config.js'
 
 /**
  * Database type.
@@ -27,6 +28,25 @@ export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'local')
     .default('development'),
+
+  APP_BASE_URL: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+  APP_CORS_ORIGINS: Joi.string()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+  AUTH_COOKIE_SECURE: Joi.boolean().optional(),
+  AUTH_COOKIE_SAME_SITE: Joi.string()
+    .valid('lax', 'none', 'strict')
+    .default('lax'),
+  AUTH_COOKIE_DOMAIN: Joi.string().hostname().optional(),
 
   JWT_SECRET: Joi.string().required(),
 
@@ -66,4 +86,27 @@ export const envValidationSchema = Joi.object({
   LOGGER_COLORS: Joi.boolean().empty('').optional(),
   LOGGER_COMPACT: Joi.boolean().empty('').optional(),
   LOGGER_DEPTH: Joi.number().empty('').optional(),
+}).custom((env, helpers) => {
+  let allowedOrigins: string[]
+  try {
+    allowedOrigins = parseAllowedOrigins(env.APP_CORS_ORIGINS, env.NODE_ENV)
+  }
+  catch {
+    return helpers.error('any.invalid')
+  }
+
+  const cookieSecure = env.AUTH_COOKIE_SECURE ?? env.NODE_ENV === 'production'
+  if (env.AUTH_COOKIE_SAME_SITE === 'none' && !cookieSecure)
+    return helpers.error('any.invalid')
+
+  if (env.NODE_ENV === 'production') {
+    if (!env.APP_BASE_URL?.startsWith('https://'))
+      return helpers.error('any.invalid')
+    if (!cookieSecure)
+      return helpers.error('any.invalid')
+    if (allowedOrigins.some(origin => !origin.startsWith('https://')))
+      return helpers.error('any.invalid')
+  }
+
+  return env
 })

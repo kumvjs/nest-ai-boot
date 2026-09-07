@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { SecurityConfig } from '#/config/index.js'
+import type { BrowserSecurityConfig, SecurityConfig } from '#/config/index.js'
 import type { AuthService } from './auth.service.js'
 import type { CaptchaService } from './services/captcha.service.js'
 import { HttpStatus } from '@nestjs/common'
@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller.js'
 
 jest.mock('#/config/index.js', () => ({
   APP_CONFIG: { KEY: 'appConfig' },
+  BROWSER_SECURITY_CONFIG: { KEY: 'browserSecurityConfig' },
   securityConfig: { KEY: 'securityConfig' },
 }))
 
@@ -25,10 +26,20 @@ describe('vben authentication contract', () => {
   const security = {
     refreshExpire: 604_800,
   } as SecurityConfig
+  const browserSecurity = {
+    allowedOrigins: ['http://localhost:5999'],
+    refreshCookie: {
+      httpOnly: true,
+      path: '/api/auth',
+      sameSite: 'lax',
+      secure: false,
+    },
+  } as BrowserSecurityConfig
   const controller = new AuthController(
     authService as unknown as AuthService,
     {} as CaptchaService,
     security,
+    browserSecurity,
   )
 
   beforeEach(() => {
@@ -58,8 +69,9 @@ describe('vben authentication contract', () => {
     expect(reply.cookie).toHaveBeenCalledWith('refresh_token', 'refresh-token', {
       httpOnly: true,
       maxAge: security.refreshExpire,
-      sameSite: 'strict',
-      secure: true,
+      path: '/api/auth',
+      sameSite: 'lax',
+      secure: false,
     })
   })
 
@@ -112,7 +124,10 @@ describe('vben authentication contract', () => {
       reply as unknown as FastifyReply,
     )).resolves.toBeUndefined()
     expect(authService.clearLoginStatus).toHaveBeenCalledWith(tokenInfo, 'refresh-token')
-    expect(reply.clearCookie).toHaveBeenCalledWith('refresh_token')
+    expect(reply.clearCookie).toHaveBeenCalledWith(
+      'refresh_token',
+      browserSecurity.refreshCookie,
+    )
   })
 
   it('clears the browser refresh cookie even when server-side logout fails', async () => {
@@ -123,7 +138,10 @@ describe('vben authentication contract', () => {
       { cookies: { refresh_token: 'refresh-token' } } as unknown as FastifyRequest,
       reply as unknown as FastifyReply,
     )).rejects.toThrow('storage unavailable')
-    expect(reply.clearCookie).toHaveBeenCalledWith('refresh_token')
+    expect(reply.clearCookie).toHaveBeenCalledWith(
+      'refresh_token',
+      browserSecurity.refreshCookie,
+    )
   })
 
   it('returns effective menu/button codes inside the canonical ResOp envelope', async () => {

@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { SecurityConfig } from '#/config/index.js'
+import type { BrowserSecurityConfig, SecurityConfig } from '#/config/index.js'
 import { Body, Controller, Get, Headers, Inject, Post, Req, Res } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
@@ -9,7 +9,7 @@ import { GetIp } from '#/common/decorators/http.decorator.js'
 import { Public } from '#/common/decorators/public.decorator.js'
 import { ApiSecurityAuth } from '#/common/decorators/swagger.decorator.js'
 import { BusinessException } from '#/common/exceptions/business.exception.js'
-import { securityConfig } from '#/config/index.js'
+import { BROWSER_SECURITY_CONFIG, securityConfig } from '#/config/index.js'
 import { AuthService } from './auth.service.js'
 import { LoginDto, LoginTokenResponseDto } from './dto/auth.dto.js'
 import { CaptchaService } from './services/captcha.service.js'
@@ -20,6 +20,8 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly captchaService: CaptchaService,
     @Inject(securityConfig.KEY) private securityConfig: SecurityConfig,
+    @Inject(BROWSER_SECURITY_CONFIG.KEY)
+    private browserSecurity: BrowserSecurityConfig,
   ) { }
 
   @Post('login')
@@ -34,13 +36,7 @@ export class AuthController {
       ip,
       ua,
     )
-    // 设置refreshToken cookie
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: true, // production 必须 true
-      sameSite: 'strict', // 防 CSRF（或 lax）
-      maxAge: this.securityConfig.refreshExpire,
-    })
+    this.setRefreshCookie(res, refreshToken)
     return { accessToken }
   }
 
@@ -58,7 +54,7 @@ export class AuthController {
       )
     }
     finally {
-      res.clearCookie('refresh_token')
+      res.clearCookie('refresh_token', this.browserSecurity.refreshCookie)
     }
   }
 
@@ -75,13 +71,7 @@ export class AuthController {
 
     const { accessToken, refreshToken } = await this.authService.refreshToken(oldRefreshToken)
 
-    // 设置refreshToken cookie
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: true, // production 必须 true
-      sameSite: 'strict', // 防 CSRF（或 lax）
-      maxAge: this.securityConfig.refreshExpire,
-    })
+    this.setRefreshCookie(res, refreshToken)
     return { accessToken }
   }
 
@@ -91,5 +81,12 @@ export class AuthController {
   @ApiResult({ type: [String] })
   async codes(@CurrentUser() user: LoginUserContext) {
     return this.authService.getEffectivePermissionsByUserId(user.uid)
+  }
+
+  private setRefreshCookie(reply: FastifyReply, refreshToken: string): void {
+    reply.cookie('refresh_token', refreshToken, {
+      ...this.browserSecurity.refreshCookie,
+      maxAge: this.securityConfig.refreshExpire,
+    })
   }
 }
