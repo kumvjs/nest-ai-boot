@@ -45,12 +45,20 @@ JWT 校验还会检查：
 ```text
 sys_user ──< sys_user_role >── sys_role
                                   │
-                                  └──< sys_role_menu >── sys_menu.permission
+                                  └──< sys_role_menu >── sys_menu.auth_code
 ```
 
-`sys_menu.permission` 可保存逗号分隔权限码。有效权限只来自启用角色关联的启用菜单或按钮；返回前会拆分、去空、去重并稳定排序。启用的 `super` 角色不要求建立逐项角色菜单关联，而是获得全部启用菜单/按钮权限码，和后端守卫的超级用户放行语义保持一致。守卫只根据启用角色关系生成的 `roleCodes` 判断 `super`，不会信任 `sys_user.role` 的旧冗余值。
+`sys_menu.auth_code` 是 Vben 的 `authCode` 持久化列，每行只保存一个权限码。查询会去空、去重并稳定排序；角色关联产生的重复行优先在 PostgreSQL 中去重。有效权限只来自启用角色关联的启用菜单或按钮。启用的 `super` 角色不要求建立逐项角色菜单关联，而是获得全部启用菜单/按钮权限码，和后端守卫的超级用户放行语义保持一致。守卫只根据启用角色关系生成的 `roleCodes` 判断 `super`，不会信任 `sys_user.role` 的旧冗余值。
 
 用户登录时，系统按数据库最新状态查询权限并写入带 schema 版本的 Redis 缓存。后续 `/auth/codes` 与 `RbacGuard` 共用缓存回源逻辑：版本匹配的命中（包括空 `codes`）直接使用，旧版或未命中值查询 PostgreSQL 并回填。`invalidatePermissionsCache(userId)` 提供按用户失效入口；后续菜单、角色和用户授权写操作必须在事务提交后调用。`RbacGuard` 读取 `@RequirePermissions()` 元数据，数组权限使用“全部满足”语义。
+
+## 菜单持久化模型
+
+`sys_menu` 作为新表按 Vben 语义直接建模，只保留 `pid`、`name`、`path`、`auth_code`、`type`、`component`、`redirect`、`meta` 和 `status`，并通过 bigint `pid` 自关联。`type` 使用 Vben v5.7.0 的五个字符串值：`catalog`、`menu`、`embedded`、`link`、`button`；`status` 直接保存 Vben 使用的 smallint `0 | 1`。Bigint ID 在 API 边界始终保持字符串。
+
+图标、排序、缓存、显隐、徽标、外链与 iframe 等前端路由展示配置存入 PostgreSQL JSONB `meta`。这样新增 Vben 元数据不会反复改表；只有需要唯一约束、索引、关系或后端业务查询的字段才提升为普通列。`name`、非空 `path` 和非空 `auth_code` 由唯一索引兜住并发写入，父菜单删除使用 `RESTRICT`。
+
+本次明确不迁移旧菜单数据，也不保留旧数字类型、逗号权限码或外链字段兼容层。使用方需要通过项目的数据库初始化流程重新创建 `sys_menu` 及其角色菜单关联数据；该操作会丢弃旧菜单配置，执行实际删表/重建前必须由部署人员确认并备份。本代码变更不会主动操作任何数据库。
 
 ```ts
 @RequirePermissions('system:user:list')
@@ -67,8 +75,8 @@ review() {}
 ## 当前完成度
 
 - 用户信息、有效权限码查询和用户分页列表已有接口。
-- `/auth/codes` 返回菜单/按钮 permission 数组，不返回角色 code；角色身份仍由 `/user/info.roles` 表达。
-- 角色、菜单实体、权限查询服务和按用户缓存失效入口已经存在。
+- `/auth/codes` 返回菜单/按钮 `authCode` 数组，不返回角色 code；角色身份仍由 `/user/info.roles` 表达。
+- 菜单实体已采用 Vben 五类型、JSONB 元数据、numeric 状态与 bigint `pid` 自关联；权限查询服务和按用户缓存失效入口已经存在。
 - 角色和菜单 Controller 尚无 CRUD 路由。
-- DTO 已预留，但用户、角色、菜单完整管理流程尚未实现。
+- 菜单 Swagger DTO 已建立但尚未接入路由；用户、角色、菜单完整管理流程尚未实现。
 - 权限写接口尚未实现；后续实现必须在数据库事务提交后失效受影响用户的权限缓存。

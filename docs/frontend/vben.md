@@ -178,7 +178,7 @@ Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，�
 | --- | --- | --- |
 | 登录 | `POST /auth/login` | body 为 `username`、`password`；返回 `data.accessToken` |
 | 当前用户 | `GET /user/info` | 返回 `userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 和 `roles` |
-| 权限码 | `GET /auth/codes` | 返回当前用户有效的菜单/按钮 permission code 数组 |
+| 权限码 | `GET /auth/codes` | 返回当前用户有效的菜单/按钮 `authCode` 数组 |
 | 刷新令牌 | `POST /auth/refresh` | Refresh Token 来自 HttpOnly Cookie，成功后轮换 Cookie |
 | 退出 | `POST /auth/logout` | Access Token 进入黑名单，并撤销/清除 Refresh Token |
 | 动态菜单 | 未实现 | 菜单实体存在，Controller 无接口 |
@@ -208,7 +208,9 @@ tokenStore.setAccessToken(result.accessToken)
 
 ### 权限语义
 
-后端细粒度权限来自 `sys_menu.permission`。`/auth/codes` 与后端 `RbacGuard` 使用同一套 Redis 缓存和 PostgreSQL 回源逻辑，只返回启用角色关联的启用菜单/按钮权限码；启用的 `super` 角色返回全部启用权限码。角色 code 与权限 code 不混用，角色身份从 `/user/info.roles` 获取。
+后端细粒度权限来自 `sys_menu.auth_code`，对应 Vben 的 `authCode`。`/auth/codes` 与后端 `RbacGuard` 使用同一套 Redis 缓存和 PostgreSQL 回源逻辑，只返回启用角色关联的启用菜单/按钮权限码；启用的 `super` 角色返回全部启用权限码。角色 code 与权限 code 不混用，角色身份从 `/user/info.roles` 获取。
+
+菜单数据模型已经按 v5.7.0 的 `catalog | menu | embedded | link | button` 五类型准备，并以 JSONB 保存可扩展 `meta`；字段直接采用 Vben 语义，Bigint 菜单 ID 保持字符串，状态直接使用 `0 | 1`。当前这只是新表和 Swagger 契约基础，`GET /menu/all` 与 `/system/menu/*` 尚未开放，不能据此提前调用菜单管理接口。旧菜单表数据不会迁移，需要重新初始化菜单与角色关联。
 
 菜单、角色或用户授权发生变化后，后端写服务必须在事务提交后失效受影响用户的权限缓存。当前已提供按用户失效能力，具体写接口将在对应系统管理批次接入。
 

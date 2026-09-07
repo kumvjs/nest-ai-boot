@@ -9,11 +9,11 @@
 | `POST` | `/auth/login` | 公开 | 用户名密码登录，返回 Access Token 并设置 Refresh Token Cookie |
 | `POST` | `/auth/refresh` | 公开 | 从 Cookie 读取并轮换 Refresh Token |
 | `POST` | `/auth/logout` | JWT | 注销当前 Access Token，并撤销和清除请求中的 Refresh Token |
-| `GET` | `/auth/codes` | JWT | 返回当前用户有效的菜单/按钮 permission code 数组 |
+| `GET` | `/auth/codes` | JWT | 返回当前用户有效的菜单/按钮 `authCode` 数组 |
 | `GET` | `/user/info` | JWT | 返回专用 DTO：`userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 与角色数组 |
 | `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
 
-`MenuController`、`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。
+`MenuController`、`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。菜单五类型实体、JSONB 元数据和 Vben Swagger DTO 属于后续接口的内部基础，不代表菜单 API 已发布。
 
 ## 登录
 

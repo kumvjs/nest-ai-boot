@@ -27,8 +27,8 @@ Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI clien
 
 ## M2 — Dynamic menu and permission backbone
 
-- [ ] Define internal menu-domain DTOs and Vben request/response adapters for all five menu types and extensible metadata.
-- [ ] Design a reversible `sys_menu` migration from the numeric three-type model to the chosen stable representation plus JSONB metadata.
+- [x] Define Vben-native menu types plus Swagger request/response DTOs for all five menu types and extensible metadata, without a redundant adapter layer.
+- [x] Redesign `sys_menu` as a fresh Vben-native table with JSONB metadata, bigint `pid`, numeric status, constraints, and indexes; existing menu data is intentionally not migrated.
 - [ ] Implement `GET /menu/all` from enabled user roles and role-menu mappings, including required parent nodes and deterministic ordering.
 - [ ] Implement `GET /system/menu/list` as a complete menu/button tree.
 - [ ] Implement `GET /system/menu/name-exists` and `GET /system/menu/path-exists` with edit-ID exclusion.

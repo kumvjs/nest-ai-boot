@@ -1,56 +1,56 @@
 import type { Relation } from 'typeorm'
-import { Column, Entity, OneToMany } from 'typeorm'
+import type { MenuMeta } from '../menu.types.js'
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
 import { CommonEntity } from '#/common/entity/common.entity.js'
 import SysRoleMenu from '../../role/entities/role-menu.entity.js'
+import { MenuStatus, MenuType } from '../menu.types.js'
 
-export enum MenuType {
-  CATALOG = 0,
-  MENU = 1,
-  BUTTON = 2,
-}
 @Entity({ name: 'sys_menu' })
+@Check('chk_sys_menu_type', `"type" IN ('catalog', 'menu', 'embedded', 'link', 'button')`)
+@Check('chk_sys_menu_status', '"status" IN (0, 1)')
 export class SysMenuEntity extends CommonEntity {
-  @Column({ name: 'parent_id', nullable: true })
-  parentId: number
+  @Column({ type: 'bigint', nullable: true })
+  @Index('idx_sys_menu_pid')
+  pid?: string | null
 
-  @Column()
+  @ManyToOne(() => SysMenuEntity, menu => menu.children, {
+    nullable: true,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'pid' })
+  parent?: Relation<SysMenuEntity> | null
+
+  @OneToMany(() => SysMenuEntity, menu => menu.parent)
+  children: Relation<SysMenuEntity[]>
+
+  @Column({ length: 30 })
+  @Index('uq_sys_menu_name', { unique: true })
   name: string
 
-  @Column({ nullable: true })
-  path: string
+  @Column({ length: 100, nullable: true })
+  @Index('uq_sys_menu_path', { unique: true })
+  path?: string | null
 
-  @Column({ nullable: true })
-  permission: string
+  @Column({ name: 'auth_code', length: 255, nullable: true })
+  @Index('uq_sys_menu_auth_code', { unique: true })
+  authCode?: string | null
 
-  @Column({ type: 'smallint', default: MenuType.MENU })
+  @Column({ length: 20, type: 'varchar', default: MenuType.MENU })
+  @Index('idx_sys_menu_type')
   type: MenuType
 
-  @Column({ nullable: true, default: '' })
-  icon: string
+  @Column({ length: 255, nullable: true })
+  component?: string | null
 
-  @Column({ name: 'order_no', type: 'int', nullable: true, default: 0 })
-  orderNo: number
+  @Column({ length: 100, nullable: true })
+  redirect?: string | null
 
-  @Column({ name: 'component', nullable: true })
-  component: string
+  @Column({ default: () => '\'{}\'::jsonb', type: 'jsonb' })
+  meta: MenuMeta
 
-  @Column({ name: 'is_ext', type: 'boolean', default: false })
-  isExt: boolean
-
-  @Column({ name: 'ext_open_mode', type: 'boolean', default: true })
-  extOpenMode: boolean
-
-  @Column({ name: 'keep_alive', type: 'boolean', default: true })
-  keepAlive: boolean
-
-  @Column({ type: 'boolean', default: true })
-  show: boolean
-
-  @Column({ name: 'active_menu', nullable: true })
-  activeMenu: string
-
-  @Column({ type: 'boolean', default: true })
-  status: boolean
+  @Column({ type: 'smallint', default: MenuStatus.ENABLED })
+  @Index('idx_sys_menu_status')
+  status: MenuStatus
 
   @OneToMany(() => SysRoleMenu, rm => rm.menu, { onDelete: 'CASCADE' })
   roleMenus: Relation<SysRoleMenu[]>

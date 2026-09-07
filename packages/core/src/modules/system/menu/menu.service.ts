@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Roles } from '#/modules/auth/auth.constant.js'
 import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
-import { MenuType, SysMenuEntity } from './entities/menu.entity.js'
+import { SysMenuEntity } from './entities/menu.entity.js'
+import { MenuStatus, MenuType } from './menu.types.js'
 
 @Injectable()
 export class MenuService {
@@ -34,17 +35,18 @@ export class MenuService {
 
     const rows = await this.menuRepository
       .createQueryBuilder('menu')
-      .select('menu.permission', 'permission')
+      .select('menu.authCode', 'authCode')
+      .distinct(true)
       .innerJoin('menu.roleMenus', 'roleMenu')
       .innerJoin('roleMenu.role', 'role')
       .where('roleMenu.roleId IN (:...roleIds)', { roleIds })
       .andWhere('role.status = :roleStatus', { roleStatus: true })
-      .andWhere('menu.status = :menuStatus', { menuStatus: true })
+      .andWhere('menu.status = :menuStatus', { menuStatus: MenuStatus.ENABLED })
       .andWhere('menu.type IN (:...permissionTypes)', {
         permissionTypes: [MenuType.MENU, MenuType.BUTTON],
       })
-      .andWhere('menu.permission IS NOT NULL')
-      .getRawMany<{ permission: string }>()
+      .andWhere('menu.authCode IS NOT NULL')
+      .getRawMany<{ authCode: string }>()
 
     return this.normalizePermissions(rows)
   }
@@ -52,22 +54,21 @@ export class MenuService {
   async getAllPermissions(): Promise<string[]> {
     const rows = await this.menuRepository
       .createQueryBuilder('menu')
-      .select('menu.permission', 'permission')
-      .where('menu.status = :menuStatus', { menuStatus: true })
+      .select('menu.authCode', 'authCode')
+      .where('menu.status = :menuStatus', { menuStatus: MenuStatus.ENABLED })
       .andWhere('menu.type IN (:...permissionTypes)', {
         permissionTypes: [MenuType.MENU, MenuType.BUTTON],
       })
-      .andWhere('menu.permission IS NOT NULL')
-      .getRawMany<{ permission: string }>()
+      .andWhere('menu.authCode IS NOT NULL')
+      .getRawMany<{ authCode: string }>()
 
     return this.normalizePermissions(rows)
   }
 
-  private normalizePermissions(rows: Array<{ permission: string }>): string[] {
+  private normalizePermissions(rows: Array<{ authCode: string }>): string[] {
     return [...new Set(
       rows
-        .flatMap(row => typeof row.permission === 'string' ? row.permission.split(',') : [])
-        .map(permission => permission.trim())
+        .map(row => typeof row.authCode === 'string' ? row.authCode.trim() : '')
         .filter(Boolean),
     )].sort()
   }

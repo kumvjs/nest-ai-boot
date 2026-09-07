@@ -68,7 +68,7 @@ Paths omit this project's default `/api` global prefix.
 | User | PUT `/system/user/:id` | partial update, including status | **Missing** | Missing |
 | User | DELETE `/system/user/:id` | id | **Missing** | Missing |
 
-The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePath`, `meta.icon`, `meta.activeIcon`, `component`, `linkSrc`, `authCode`, `status`, badge fields, keep-alive/affix flags, and hide flags. Menu types are `catalog | menu | embedded | link | button`; this is not compatible with the existing three-value numeric enum without an explicit migration/mapping.
+The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePath`, `meta.icon`, `meta.activeIcon`, `component`, `linkSrc`, `authCode`, `status`, badge fields, keep-alive/affix flags, and hide flags. Menu types are `catalog | menu | embedded | link | button`; the incompatible three-value numeric model is intentionally replaced because menu data will be reinitialized.
 
 ### Playground examples (4)
 
@@ -87,7 +87,7 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 - `/auth/codes` now returns cache-backed effective menu/button permission codes. Enabled ordinary roles contribute enabled assigned menu/button codes; enabled `super` receives all enabled codes. Role identities remain in `/user/info.roles`.
 - `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated DTO, and M1.3 added persistent avatar, home-path, and description fields. The adapter now returns only `userId`, `username`, `realName`, `avatar`, `homePath`, `desc`, and `roles`; it deliberately does not echo an Access Token.
 - `nestjs-paginate` returns a shape like `{ data, meta, links }`; Vben system tables expect unwrapped `{ items, total }` and use `page/pageSize`.
-- Existing `sys_menu` lacks the complete five-type Vben model and extensible route metadata.
+- M2.1–M2.2 define a fresh `sys_menu` shape with the complete five-type Vben model, Vben-native numeric status, stable query columns, JSONB route metadata, and a bigint `pid` self-reference. Legacy menu data will be recreated rather than migrated. Menu endpoints are still missing.
 - Existing role/menu services and controllers are partial; all writes need transactional relationship replacement and cache invalidation.
 
 ## Real persistence and business rules
@@ -95,7 +95,7 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 - Reuse `sys_user`, `sys_role`, `sys_menu`, `sys_user_role`, `sys_role_menu`, and `user_refresh_token`.
 - Add a self-referencing `sys_dept` table and an indexed department foreign key on `sys_user`.
 - Extend user/profile persistence for avatar, home path, description, timezone, and remark, choosing user columns versus a profile/preferences table before migration.
-- Model stable menu fields (`name`, `path`, `authCode`, `component`, `type`, `status`, `parentId`) as columns. Prefer PostgreSQL JSONB for fast-moving Vben `meta`; promote only fields needing uniqueness, indexing, or domain queries.
+- Model stable menu fields (`name`, `path`, `authCode`, `component`, `redirect`, `type`, `status`, `pid`) as columns. Prefer PostgreSQL JSONB for fast-moving Vben `meta`; promote only fields needing uniqueness, indexing, or domain queries.
 - Treat role `permissions` as menu/button IDs stored through `sys_role_menu` and replace mappings transactionally.
 - The official user demo also submits `permissions`, but this conflicts with the established user -> role -> menu model. Recommendation: keep role-based authorization and adapt the Vben user form to `roleIds`. If exact demo compatibility requires direct grants, first design `sys_user_menu` plus explicit union/override rules.
 - Reject cyclic department/menu parents. Reject destructive deletes when children or active references exist. Protect the last super administrator and protected/default roles. Prefer soft deletion for users.
@@ -137,7 +137,13 @@ M1.2 keeps the existing JWT and Redis model but closes the refresh replay window
 
 ## Implemented effective permission resolution
 
-M1.4 makes `/auth/codes` and `RbacGuard` use the same cache-backed resolver. A version-matching cached empty `codes` array is a real hit; missing, invalid, unknown-version, and legacy raw-array values trigger a PostgreSQL query and cache refill. This lazy cache-schema migration prevents forever-cached pre-M1.4 permissions from retaining the old filtering semantics. Permission rows are restricted to enabled roles and enabled menu/button records, then comma-separated values are trimmed, stripped of empty entries, deduplicated, and sorted. Enabled `super` role assignments load every enabled menu/button permission code. A targeted invalidation method is available for the transaction-after-commit hooks required by M2, M4, and M5.
+M1.4 makes `/auth/codes` and `RbacGuard` use the same cache-backed resolver. A version-matching cached empty `codes` array is a real hit; missing, invalid, unknown-version, and legacy raw-array values trigger a PostgreSQL query and cache refill. This lazy cache-schema migration prevents forever-cached pre-M1.4 permissions from retaining the old filtering semantics. Permission rows are restricted to enabled roles and enabled menu/button records, deduplicated, and sorted. M2's fresh table makes each row hold one canonical `authCode`; no comma-splitting compatibility remains. Enabled `super` role assignments load every enabled menu/button permission code. A targeted invalidation method is available for the transaction-after-commit hooks required by M2, M4, and M5.
+
+## Implemented fresh menu-model foundation
+
+M2.1–M2.2 use one Vben-native menu model rather than maintaining an old domain shape plus a translation adapter. Shared types cover `catalog`, `menu`, `embedded`, `link`, and `button`, numeric `0 | 1` status, and extensible route metadata. Dedicated request/response DTOs remain necessary for validation and Swagger, while the later service layer will build trees and handle the two form-only compatibility fields `activePath` and `linkSrc`.
+
+The fresh `sys_menu` stores only `pid`, `name`, `path`, `auth_code`, `type`, `component`, `redirect`, `meta`, and `status` beyond common audit fields. PostgreSQL JSONB absorbs Vben display/route metadata that does not require a relational constraint or index. Unique indexes protect name, non-null path, and non-null authCode; checks protect the five types and numeric status; the self-FK restricts parent deletion. There is deliberately no legacy migration or comma-separated permission compatibility. Existing menus and role-menu mappings must be recreated through the database bootstrap process. No menu route is exposed in this foundation batch.
 
 ## Browser security deployment model
 

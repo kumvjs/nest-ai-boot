@@ -1,12 +1,14 @@
 import type { Repository } from 'typeorm'
 import type { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
 import { Roles } from '#/modules/auth/auth.constant.js'
-import { MenuType, SysMenuEntity } from './entities/menu.entity.js'
+import { SysMenuEntity } from './entities/menu.entity.js'
 import { MenuService } from './menu.service.js'
+import { MenuStatus, MenuType } from './menu.types.js'
 
 describe('vben effective permission codes', () => {
   const queryBuilder = {
     andWhere: jest.fn(),
+    distinct: jest.fn(),
     getRawMany: jest.fn(),
     innerJoin: jest.fn(),
     select: jest.fn(),
@@ -26,7 +28,7 @@ describe('vben effective permission codes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    for (const method of ['andWhere', 'innerJoin', 'select', 'where'] as const)
+    for (const method of ['andWhere', 'distinct', 'innerJoin', 'select', 'where'] as const)
       queryBuilder[method].mockReturnValue(queryBuilder)
     menuRepository.createQueryBuilder.mockReturnValue(queryBuilder)
     queryBuilder.getRawMany.mockResolvedValue([])
@@ -38,9 +40,11 @@ describe('vben effective permission codes', () => {
     userRoleService.getRoleIdsByUser.mockResolvedValue(['10', '11'])
     userRoleService.getUserRoleCodes.mockResolvedValue(['admin'])
     queryBuilder.getRawMany.mockResolvedValue([
-      { permission: ' system:user:update,system:user:list ' },
-      { permission: 'system:user:list,,system:role:list' },
-      { permission: '   ' },
+      { authCode: ' system:user:update ' },
+      { authCode: 'system:user:list' },
+      { authCode: 'system:user:list' },
+      { authCode: 'system:role:list' },
+      { authCode: '   ' },
     ])
 
     await expect(service.getPermissionsByUserId('42')).resolves.toEqual([
@@ -61,12 +65,15 @@ describe('vben effective permission codes', () => {
     )
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'menu.status = :menuStatus',
-      { menuStatus: true },
+      { menuStatus: MenuStatus.ENABLED },
     )
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'menu.type IN (:...permissionTypes)',
       { permissionTypes: [MenuType.MENU, MenuType.BUTTON] },
     )
+    expect(queryBuilder.select).toHaveBeenCalledWith('menu.authCode', 'authCode')
+    expect(queryBuilder.distinct).toHaveBeenCalledWith(true)
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith('menu.authCode IS NOT NULL')
   })
 
   it('returns no permissions without an assigned enabled role', async () => {
@@ -79,7 +86,8 @@ describe('vben effective permission codes', () => {
     userRoleService.getRoleIdsByUser.mockResolvedValue(['1'])
     userRoleService.getUserRoleCodes.mockResolvedValue([Roles.SUPER])
     queryBuilder.getRawMany.mockResolvedValue([
-      { permission: 'system:user:list, system:user:update' },
+      { authCode: 'system:user:list' },
+      { authCode: 'system:user:update' },
     ])
 
     await expect(service.getPermissionsByUserId('42')).resolves.toEqual([
@@ -90,7 +98,7 @@ describe('vben effective permission codes', () => {
     expect(queryBuilder.innerJoin).not.toHaveBeenCalled()
     expect(queryBuilder.where).toHaveBeenCalledWith(
       'menu.status = :menuStatus',
-      { menuStatus: true },
+      { menuStatus: MenuStatus.ENABLED },
     )
   })
 })

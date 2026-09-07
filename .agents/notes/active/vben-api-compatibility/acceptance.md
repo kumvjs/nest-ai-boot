@@ -85,3 +85,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] No password hashes are bulk-converted and no new account/reset flow copies the MD5 implementation.
 - [x] M5 contains an actionable Argon2id-first mixed-hash migration, opportunistic rehash, inactive-account reset, session invalidation, rollout, and rollback checklist based on current OWASP guidance.
 - [x] Request-lifecycle/auth documentation, focused and full tests, type-checking, lint, Nest build, contract parser tests, and locked Vben fixtures pass.
+
+## Completed batch: M2.1–M2.2
+
+- [x] Shared menu types represent `catalog`, `menu`, `embedded`, `link`, and `button`, with Vben-native numeric `0 | 1` status and extensible JSONB metadata.
+- [x] Swagger write/list/dynamic-route DTOs express bigint IDs as strings, `pid`, recursive children, conditional route fields, and the complete known Vben metadata surface without requiring a domain adapter.
+- [x] `SysMenuEntity` directly persists Vben semantics using `pid`, `name`, `path`, `auth_code`, `type`, `component`, `redirect`, `meta`, and `status`, plus self/role relations; legacy presentation columns are removed.
+- [x] The fresh table model enforces five allowed types, numeric status, restrictive parent deletion, and unique name/path/authCode constraints; no legacy migration is created by design.
+- [x] Effective permission queries retain their existing role/super-role behavior, read one canonical `authCode` per row, filter numeric enabled status, and deduplicate role-join results.
+- [x] No menu endpoint or write business logic is exposed in this batch.
+- [x] DTO/entity/permission tests, type-checking, lint, Nest build, contract parser tests, locked Vben fixtures, docs, and diff checks pass.
