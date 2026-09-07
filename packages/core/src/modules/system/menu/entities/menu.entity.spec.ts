@@ -47,9 +47,9 @@ describe('sys menu entity', () => {
     const checkNames = storage.checks
       .filter(check => check.target === SysMenuEntity)
       .map(check => check.name)
-    const uniqueIndexNames = storage.indices
+    const uniqueIndexes = storage.indices
       .filter(index => index.target === SysMenuEntity && index.unique)
-      .map(index => index.name)
+    const uniqueIndexNames = uniqueIndexes.map(index => index.name)
     const parentRelation = storage.relations.find(
       relation => relation.target === SysMenuEntity && relation.propertyName === 'parent',
     )
@@ -63,6 +63,8 @@ describe('sys menu entity', () => {
       'uq_sys_menu_name',
       'uq_sys_menu_path',
     ]))
+    expect(uniqueIndexes).toHaveLength(3)
+    expect(uniqueIndexes.every(index => index.where === '"deleted_at" IS NULL')).toBe(true)
     expect(parentRelation?.options).toMatchObject({ onDelete: 'RESTRICT' })
   })
 

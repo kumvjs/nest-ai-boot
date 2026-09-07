@@ -31,7 +31,7 @@ Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI clien
 - [x] Redesign `sys_menu` as a fresh Vben-native table with JSONB metadata, bigint `pid`, numeric status, constraints, and indexes; existing menu data is intentionally not migrated.
 - [x] Implement `GET /menu/all` from enabled user roles and role-menu mappings, including required parent nodes and deterministic ordering.
 - [x] Implement `GET /system/menu/list` as a complete menu/button tree.
-- [ ] Implement `GET /system/menu/name-exists` and `GET /system/menu/path-exists` with edit-ID exclusion.
+- [x] Implement `GET /system/menu/name-exists` and `GET /system/menu/path-exists` with edit-ID exclusion.
 - [ ] Implement `POST /system/menu`, `PUT /system/menu/:id`, and `DELETE /system/menu/:id`.
 - [ ] Enforce name/path/authCode rules, safe component/link values, valid type-dependent fields, and no parent cycles.
 - [ ] Reject deletion with children or role references unless an explicit reviewed replacement workflow exists.

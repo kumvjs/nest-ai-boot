@@ -21,6 +21,7 @@ function menu(input: Partial<SysMenuEntity> & Pick<SysMenuEntity, 'id' | 'name'>
 
 describe('vben system menu list', () => {
   const menuRepository = {
+    existsBy: jest.fn(),
     find: jest.fn(),
   }
   const userRoleService = {} as UserRoleService
@@ -32,6 +33,7 @@ describe('vben system menu list', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    menuRepository.existsBy.mockResolvedValue(false)
     menuRepository.find.mockResolvedValue([])
   })
 
@@ -180,6 +182,41 @@ describe('vben system menu list', () => {
     expect(Reflect.getMetadata(PATH_METADATA, SystemMenuController)).toBe('system/menu')
     expect(Reflect.getMetadata(PATH_METADATA, SystemMenuController.prototype.list)).toBe('list')
     expect(Reflect.getMetadata(PERMISSION_KEY, SystemMenuController.prototype.list)).toBe(
+      MENU_PERMISSIONS.LIST,
+    )
+  })
+
+  it('checks exact names and paths while excluding the menu being edited', async () => {
+    menuRepository.existsBy
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false)
+
+    await expect(controller.nameExists({ id: '7', name: 'SystemMenu' })).resolves.toBe(true)
+    await expect(controller.pathExists({ id: '7', path: '/system/menu' })).resolves.toBe(false)
+
+    const nameWhere = menuRepository.existsBy.mock.calls[0][0]
+    const pathWhere = menuRepository.existsBy.mock.calls[1][0]
+    expect(nameWhere).toMatchObject({ name: 'SystemMenu' })
+    expect(nameWhere.id).toMatchObject({ _type: 'not', _value: '7' })
+    expect(pathWhere).toMatchObject({ path: '/system/menu' })
+    expect(pathWhere.id).toMatchObject({ _type: 'not', _value: '7' })
+  })
+
+  it('checks all records when an edit ID is not supplied and preserves ResOp<boolean>', async () => {
+    menuRepository.existsBy.mockResolvedValue(true)
+
+    const data = await controller.nameExists({ name: 'systemMenu' })
+    expect(data).toBe(true)
+    expect(menuRepository.existsBy).toHaveBeenCalledWith({ name: 'systemMenu' })
+    expect(ResOp.success(data)).toMatchObject({ code: 0, data: true, success: true })
+  })
+
+  it.each([
+    ['nameExists', 'name-exists'],
+    ['pathExists', 'path-exists'],
+  ] as const)('protects %s at its Vben route with menu-list permission', (method, path) => {
+    expect(Reflect.getMetadata(PATH_METADATA, SystemMenuController.prototype[method])).toBe(path)
+    expect(Reflect.getMetadata(PERMISSION_KEY, SystemMenuController.prototype[method])).toBe(
       MENU_PERMISSIONS.LIST,
     )
   })

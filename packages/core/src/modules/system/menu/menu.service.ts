@@ -1,7 +1,7 @@
 import type { VbenMenuResponseDto, VbenRouteRecordDto } from './dto/vben-menu.dto.js'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Not, Repository } from 'typeorm'
 import { Roles } from '#/modules/auth/auth.constant.js'
 import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
 import { SysMenuEntity } from './entities/menu.entity.js'
@@ -75,6 +75,18 @@ export class MenuService {
     })
 
     return this.buildSystemMenuTree(menus)
+  }
+
+  async isMenuNameExists(name: string, editingId?: string): Promise<boolean> {
+    return this.menuRepository.existsBy(
+      editingId ? { id: Not(editingId), name } : { name },
+    )
+  }
+
+  async isMenuPathExists(path: string, editingId?: string): Promise<boolean> {
+    return this.menuRepository.existsBy(
+      editingId ? { id: Not(editingId), path } : { path },
+    )
   }
 
   async getMenusByRoleIds(roleIds: string[]): Promise<string[]> {

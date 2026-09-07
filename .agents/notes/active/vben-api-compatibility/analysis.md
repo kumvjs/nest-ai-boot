@@ -54,8 +54,8 @@ Paths omit this project's default `/api` global prefix.
 | Department | PUT `/system/dept/:id` | `pid,name,status,remark` | Fake success only | Missing |
 | Department | DELETE `/system/dept/:id` | id | Fake success only | Missing |
 | Menu | GET `/system/menu/list` | complete menu/button tree | Yes | Implemented in M2.4 |
-| Menu | GET `/system/menu/name-exists` | query `name`, optional editing `id` | Yes | Missing |
-| Menu | GET `/system/menu/path-exists` | query `path`, optional editing `id` | Yes | Missing |
+| Menu | GET `/system/menu/name-exists` | query `name`, optional editing `id` | Yes | Implemented in M2.5 |
+| Menu | GET `/system/menu/path-exists` | query `path`, optional editing `id` | Yes | Implemented in M2.5 |
 | Menu | POST `/system/menu` | Vben menu form | **Missing** | Missing |
 | Menu | PUT `/system/menu/:id` | Vben menu form | **Missing** | Missing |
 | Menu | DELETE `/system/menu/:id` | id | **Missing** | Missing |
@@ -156,6 +156,12 @@ M2.3 publishes authenticated `GET /menu/all` at the root runtime path rather tha
 M2.4 publishes permission-protected `GET /system/menu/list`. Unlike the runtime tree, the management tree includes every non-deleted type and both numeric statuses, while projecting only the Vben contract rather than serializing entities. Bigint IDs remain strings, optional route fields and arbitrary public metadata survive, and `meta.activePath` is also emitted as the top-level compatibility field read by the v5.7.0 edit form.
 
 Fresh-table constraints should prevent missing parents, and the later write service will reject cycles. The read path is still defensive: missing/self parents become roots, and each existing cycle has one deterministic parent link broken by `meta.order` then unique `name`. This guarantees every stored record appears exactly once and JSON serialization cannot recurse forever.
+
+## Implemented menu existence checks
+
+M2.5 publishes the two Vben form validators at `GET /system/menu/name-exists` and `GET /system/menu/path-exists`. Both use the existing menu-list permission and the canonical `ResOp<boolean>` response. Required lookup values and optional positive bigint-string edit IDs are validated before the service queries PostgreSQL; an edit ID adds `id != :editingId`, so the current row does not reject its unchanged value. Values intentionally retain exact, case-sensitive semantics. TypeORM's normal repository scope excludes soft-deleted rows, and the three menu uniqueness constraints are partial indexes over `deleted_at IS NULL`, so a false precheck cannot become a uniqueness failure solely because a deleted row retains that value.
+
+`MenuModule` remains reachable through `AuthModule`, which imports its exported `MenuService` for permission resolution and registers its controllers. The extra direct `AppModule` import introduced during M2.3 was therefore removed; controller metadata continues to define root `/menu/all` and `/system/menu/*` paths.
 
 ## Browser security deployment model
 

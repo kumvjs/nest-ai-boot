@@ -24,15 +24,15 @@ export class SysMenuEntity extends CommonEntity {
   children: Relation<SysMenuEntity[]>
 
   @Column({ length: 30 })
-  @Index('uq_sys_menu_name', { unique: true })
+  @Index('uq_sys_menu_name', { unique: true, where: '"deleted_at" IS NULL' })
   name: string
 
   @Column({ length: 100, nullable: true })
-  @Index('uq_sys_menu_path', { unique: true })
+  @Index('uq_sys_menu_path', { unique: true, where: '"deleted_at" IS NULL' })
   path?: string | null
 
   @Column({ name: 'auth_code', length: 255, nullable: true })
-  @Index('uq_sys_menu_auth_code', { unique: true })
+  @Index('uq_sys_menu_auth_code', { unique: true, where: '"deleted_at" IS NULL' })
   authCode?: string | null
 
   @Column({ length: 20, type: 'varchar', default: MenuType.MENU })

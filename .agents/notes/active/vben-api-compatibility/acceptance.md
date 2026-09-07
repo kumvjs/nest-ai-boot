@@ -114,3 +114,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Every record appears exactly once in a recursively ordered tree; malformed missing/self/cyclic parent links are normalized safely without producing circular JSON.
 - [x] No existence check, create/update/delete logic, or cache invalidation hook is implemented in this batch.
 - [x] Focused and full tests, type-checking, lint, Nest build, locked Vben contract fixtures, docs, and diff checks pass.
+
+## Completed batch: M2.5
+
+- [x] Remove the redundant direct `MenuModule` import from `AppModule` without changing `/menu/all` or `/system/menu/*` controller paths.
+- [x] `GET /system/menu/name-exists` and `GET /system/menu/path-exists` are authenticated, require `system:menu:list`, and expose Swagger `ResOp<boolean>` contracts.
+- [x] Both endpoints validate their required query value and an optional positive bigint-string edit ID.
+- [x] Existence queries use the same exact, case-sensitive value semantics as the active-row unique indexes and exclude only the supplied edit ID.
+- [x] Soft-deleted rows remain excluded through TypeORM's default repository scope, and partial unique indexes allow their values to be reused without a later write conflict.
+- [x] No menu create/update/delete logic or cache invalidation hook is implemented in this batch.
+- [x] Focused and full tests, type-checking, lint, Nest build, locked Vben contract fixtures, docs, and diff checks pass.
