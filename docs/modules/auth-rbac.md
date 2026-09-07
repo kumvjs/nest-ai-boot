@@ -7,7 +7,7 @@
 - Access Token 返回给前端，由请求头 `Authorization: Bearer <token>` 携带。
 - Refresh Token 写入 `refresh_token` HttpOnly Cookie，并在 PostgreSQL 与 Redis 中保留状态。
 
-刷新令牌采用轮换机制：旧 Refresh Token 被删除，再生成新的 Access Token 与 Refresh Token。退出登录会把当前 JWT UUID 加入 Redis 黑名单，并清理关联登录态。
+刷新令牌采用轮换机制：数据库原子删除旧 Refresh Token 是一次性消费点，只有成功删除一条记录的请求才能生成新的 Access Token 与 Refresh Token，因此旧令牌的并发请求或重放不会产生第二组令牌。退出登录会把当前 JWT UUID 加入 Redis 黑名单，清理 Access Token 状态，撤销请求 Cookie 对应的 Refresh Token，并清除浏览器 Cookie。
 
 登录与刷新均返回统一 `ResOp`，Access Token 位于 `data.accessToken`；Vben 前端的 OpenAPI 客户端在统一拦截器中解包 `data`。`/user/info` 使用专用响应 DTO 将数据库 `id` 映射为字符串 `userId`，不会直接暴露用户实体和审计字段。
 

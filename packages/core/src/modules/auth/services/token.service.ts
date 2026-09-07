@@ -11,12 +11,10 @@ import { BusinessException } from '#/common/exceptions/business.exception.js'
 
 import { securityConfig } from '#/config/index.js'
 import { RoleService } from '#/modules/system/role/role.service.js'
-import { SysUserEntity } from '#/modules/user/entities/user.entity.js'
 import { CacheService } from '#/shared/cache/cache.service.js'
 import { authKeys } from '#/shared/cache/keys/index.js'
 import { onlineKeys } from '#/shared/cache/keys/online.keys.js'
 import { generateUUID } from '#/utils/index.js'
-import { AccessTokenDto } from '../dto/access-token.dto.js'
 import { RefreshTokenEntity } from '../entities/refresh-token.entity.js'
 import { JwtStrategy } from '../strategies/jwt.strategy.js'
 
@@ -67,7 +65,7 @@ export class TokenService {
 
   /**
    * 生成新的RefreshToken并存入数据库
-   * @param accessToken
+   * @param payload
    * @param now
    */
   async generateRefreshToken(
@@ -97,22 +95,40 @@ export class TokenService {
   }
 
   async refreshToken(oldRefreshToken: string) {
-    // 1. 验证旧 Token
-    const checkRefreshToken = await this.checkRefreshToken(oldRefreshToken)
-    if (!checkRefreshToken) {
+    let refreshUser: AuthUser
+    try {
+      refreshUser = await this.verifyRefreshToken(oldRefreshToken)
+    }
+    catch {
       throw new BusinessException(ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED)
     }
+
+    const cachedUserId = await this.cacheService.getCache(
+      authKeys.userRefreshTokens(refreshUser.uid, refreshUser.jwtUuid),
+    )
+    if (String(cachedUserId) !== refreshUser.uid)
+      throw new BusinessException(ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED)
+
     const tokenRecord = await this.refreshTokenRepo.findOne({ where: { value: oldRefreshToken } })
-    if (!tokenRecord || dayjs(tokenRecord.expired_at).isBefore(dayjs())) {
+    if (
+      !tokenRecord
+      || tokenRecord.userId !== refreshUser.uid
+      || dayjs(tokenRecord.expired_at).isBefore(dayjs())
+    ) {
       throw new BusinessException(ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED)
     }
 
     const userId = tokenRecord.userId
 
-    // 2. 废弃旧 refreshToken
-    await this.removeRefreshToken(oldRefreshToken)
+    // PostgreSQL 的单条 DELETE 是并发刷新时的一次性消费点。只有删除成功的请求可以继续轮换。
+    const consumed = await this.refreshTokenRepo.delete({ value: oldRefreshToken })
+    if (consumed.affected !== 1)
+      throw new BusinessException(ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED)
 
-    // 3. 生成新的 RefreshToken（全新有效期）
+    await this.cacheService.delCache(
+      authKeys.userRefreshTokens(refreshUser.uid, refreshUser.jwtUuid),
+    )
+
     const refreshTokenPayload: AuthUser = {
       jwtUuid: generateUUID(),
       uid: userId,
@@ -121,7 +137,6 @@ export class TokenService {
 
     const newRefreshToken = await this.generateRefreshToken(refreshTokenPayload, dayjs())
 
-    // 4. 生成新的 AccessToken
     const accessToken = await this.generateAccessToken(userId)
 
     return {
@@ -147,8 +162,8 @@ export class TokenService {
   }
 
   /**
-   * 移除AccessToken且自动移除关联的RefreshToken
-   * @param value
+   * 移除指定 JWT UUID 对应的 Access Token 状态
+   * @param jwtUuid
    */
   async removeAccessTokenByJwtUuid(jwtUuid: string) {
     const userId = await this.cacheService.getCache(authKeys.accessToken(jwtUuid))
@@ -165,13 +180,26 @@ export class TokenService {
    */
   async removeRefreshToken(value: string) {
     const user = await this.verifyRefreshToken(value)
-    const refreshToken = await RefreshTokenEntity.findOne({
-      where: { value },
-    })
-    if (refreshToken) {
-      await refreshToken.remove()
-    }
+    await this.refreshTokenRepo.delete({ value })
     await this.cacheService.delCache(authKeys.userRefreshTokens(user.uid, user.jwtUuid))
+  }
+
+  /**
+   * 注销场景的幂等撤销。即使 Cookie 已损坏，也按原值清理可能存在的数据库记录。
+   */
+  async revokeRefreshToken(value: string): Promise<void> {
+    let user: AuthUser | undefined
+    try {
+      user = await this.verifyRefreshToken(value)
+    }
+    catch { }
+
+    await this.refreshTokenRepo.delete({ value })
+    if (user) {
+      await this.cacheService.delCache(
+        authKeys.userRefreshTokens(user.uid, user.jwtUuid),
+      )
+    }
   }
 
   /**
@@ -199,7 +227,7 @@ export class TokenService {
 
   /**
    * 检查accessToken是否存在，并且是否处于有效期内
-   * @param value
+   * @param refreshToken
    */
   async checkRefreshToken(refreshToken: string) {
     let isValid = false
@@ -215,7 +243,7 @@ export class TokenService {
 
   /**
    * 验证refreshToken是否正确,如果正确则返回所属用户对象
-   * @param token
+   * @param refreshToken
    */
   async verifyRefreshToken(refreshToken: string): Promise<AuthUser> {
     return this.jwtService.verifyAsync(refreshToken, {

@@ -38,3 +38,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] `/user/info` maps bigint `id` to string `userId` through a dedicated Swagger DTO and does not expose entity/audit/password fields.
 - [x] The frozen refresh fixture reflects the project OpenAPI client's `ResOp` unwrapping contract rather than the upstream mock's raw-token exception.
 - [x] Focused Jest tests, test type-checking, lint, Nest build, and locked Vben fixture validation pass.
+
+## Completed batch: M1.2
+
+- [x] Refresh verifies the JWT, Redis state, database ownership, and expiration before rotation.
+- [x] PostgreSQL atomic deletion is the single-use consumption point; a concurrent/replayed old token cannot issue a second token pair.
+- [x] Successful rotation removes the old Redis refresh state, persists/caches a new Refresh Token, and issues a new Access Token.
+- [x] Logout blacklists/removes the current Access Token, deletes the presented Refresh Token from PostgreSQL/Redis, and clears the browser cookie.
+- [x] Malformed logout cookies are deleted by opaque value without trusting an invalid JWT payload.
+- [x] The Vben integration guide includes the Swagger → OpenAPI-TS → `apiClient` generation, unwrapping, login, user-info, and refresh path.
+- [x] Four focused Jest suites (11 tests), test type-checking, lint, Nest build, contract fixtures, and Markdown diff checks pass; the VitePress build is unverified because documentation dependencies are not installed locally.

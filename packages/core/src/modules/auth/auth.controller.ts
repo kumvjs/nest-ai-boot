@@ -46,8 +46,20 @@ export class AuthController {
 
   @Post('logout')
   @ApiOperation({ summary: '账户登出' })
-  async logout(@CurrentUser() user: LoginUserContext): Promise<void> {
-    return this.authService.clearLoginStatus(user.tokenInfo)
+  async logout(
+    @CurrentUser() user: LoginUserContext,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<void> {
+    try {
+      await this.authService.clearLoginStatus(
+        user.tokenInfo,
+        req.cookies?.refresh_token,
+      )
+    }
+    finally {
+      res.clearCookie('refresh_token')
+    }
   }
 
   @Post('refresh')

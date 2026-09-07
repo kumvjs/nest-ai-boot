@@ -130,3 +130,7 @@ The scheduled main warning is advisory: it can fail visibly, but it cannot updat
 - `/auth/login` and `/auth/refresh` both expose `ResOp<LoginTokenResponseDto>` on the wire;
 - contract tests assert both the business DTO and its `ResOp` envelope;
 - any upstream raw-response special case is handled in the frontend adapter, not by fragmenting backend response conventions.
+
+## Implemented refresh lifecycle
+
+M1.2 keeps the existing JWT and Redis model but closes the refresh replay window. After signature/cache/database/expiry checks, one PostgreSQL `DELETE ... WHERE value = ?` is the single-use consumption point. Only a request whose delete affects exactly one row may create the replacement Refresh Token and Access Token. Logout now passes the HttpOnly cookie into the established login-state cleanup, revokes its PostgreSQL/Redis state, and clears it from the browser.

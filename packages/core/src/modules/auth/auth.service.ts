@@ -90,7 +90,7 @@ export class AuthService {
   /**
    * 清除登录状态信息
    */
-  async clearLoginStatus(user: AuthUser): Promise<void> {
+  async clearLoginStatus(user: AuthUser, refreshToken?: string): Promise<void> {
     const now = Math.floor(Date.now() / 1000)
     const ttl = user.exp
       ? Math.max(0, user.exp - now)
@@ -101,7 +101,12 @@ export class AuthService {
       '1',
       ttl,
     )
-    await this.tokenService.removeAccessTokenByJwtUuid(user.jwtUuid)
+    await Promise.all([
+      this.tokenService.removeAccessTokenByJwtUuid(user.jwtUuid),
+      refreshToken
+        ? this.tokenService.revokeRefreshToken(refreshToken)
+        : Promise.resolve(),
+    ])
   }
 
   async getPasswordVersionByUid(uid: string) {

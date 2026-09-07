@@ -18,6 +18,7 @@ describe('vben authentication contract', () => {
     refreshToken: jest.fn(),
   }
   const reply = {
+    clearCookie: jest.fn(),
     cookie: jest.fn(),
   }
   const security = {
@@ -104,7 +105,23 @@ describe('vben authentication contract', () => {
     }
     authService.clearLoginStatus.mockResolvedValue(undefined)
 
-    await expect(controller.logout({ tokenInfo } as LoginUserContext)).resolves.toBeUndefined()
-    expect(authService.clearLoginStatus).toHaveBeenCalledWith(tokenInfo)
+    await expect(controller.logout(
+      { tokenInfo } as LoginUserContext,
+      { cookies: { refresh_token: 'refresh-token' } } as unknown as FastifyRequest,
+      reply as unknown as FastifyReply,
+    )).resolves.toBeUndefined()
+    expect(authService.clearLoginStatus).toHaveBeenCalledWith(tokenInfo, 'refresh-token')
+    expect(reply.clearCookie).toHaveBeenCalledWith('refresh_token')
+  })
+
+  it('clears the browser refresh cookie even when server-side logout fails', async () => {
+    authService.clearLoginStatus.mockRejectedValue(new Error('storage unavailable'))
+
+    await expect(controller.logout(
+      { tokenInfo: { jwtUuid: 'jwt-uuid', pv: 1, uid: '1' } } as LoginUserContext,
+      { cookies: { refresh_token: 'refresh-token' } } as unknown as FastifyRequest,
+      reply as unknown as FastifyReply,
+    )).rejects.toThrow('storage unavailable')
+    expect(reply.clearCookie).toHaveBeenCalledWith('refresh_token')
   })
 })
