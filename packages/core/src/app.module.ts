@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module.js'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js'
 import { RbacGuard } from './modules/auth/guards/rbac.guard.js'
 import { TrustedOriginGuard } from './modules/auth/guards/trusted-origin.guard.js'
+import { MenuModule } from './modules/system/menu/menu.module.js'
 import { SystemModule } from './modules/system/system.module.js'
 import { UserModule } from './modules/user/user.module.js'
 import { WebsocketModule } from './modules/websocket/websocket.module.js'
@@ -31,6 +32,7 @@ import { SharedModule } from './shared/shared.module.js'
     AuthModule,
     UserModule,
     AiModule,
+    MenuModule,
     SystemModule,
     WebsocketModule,
   ],

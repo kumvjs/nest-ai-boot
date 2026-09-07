@@ -1,6 +1,6 @@
 # Vben Admin 对接
 
-项目的接口命名已覆盖 Vben 登录流程所需的基本元素，但并非开箱即用的完整 Vben 服务端。前端需要配置响应解包、Cookie 和刷新逻辑；后端仍需补齐动态菜单等接口。
+项目的接口命名已覆盖 Vben 登录流程和动态菜单所需的基本元素，但并非开箱即用的完整 Vben 服务端。前端需要配置响应解包、Cookie 和刷新逻辑；后端仍需补齐系统管理 CRUD 等接口。
 
 ## OpenAPI-TS 快速对接
 
@@ -181,7 +181,7 @@ Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，�
 | 权限码 | `GET /auth/codes` | 返回当前用户有效的菜单/按钮 `authCode` 数组 |
 | 刷新令牌 | `POST /auth/refresh` | Refresh Token 来自 HttpOnly Cookie，成功后轮换 Cookie |
 | 退出 | `POST /auth/logout` | Access Token 进入黑名单，并撤销/清除 Refresh Token |
-| 动态菜单 | 未实现 | 菜单实体存在，Controller 无接口 |
+| 动态菜单 | `GET /menu/all` | 返回当前用户可访问的 Vben 动态路由树 |
 
 登录响应业务码为 `20004` 时表示账号已停用，前端应展示后端消息并结束登录流程，不应继续调用刷新接口或写入 Access Token。
 
@@ -210,13 +210,16 @@ tokenStore.setAccessToken(result.accessToken)
 
 后端细粒度权限来自 `sys_menu.auth_code`，对应 Vben 的 `authCode`。`/auth/codes` 与后端 `RbacGuard` 使用同一套 Redis 缓存和 PostgreSQL 回源逻辑，只返回启用角色关联的启用菜单/按钮权限码；启用的 `super` 角色返回全部启用权限码。角色 code 与权限 code 不混用，角色身份从 `/user/info.roles` 获取。
 
-菜单数据模型已经按 v5.7.0 的 `catalog | menu | embedded | link | button` 五类型准备，并以 JSONB 保存可扩展 `meta`；字段直接采用 Vben 语义，Bigint 菜单 ID 保持字符串，状态直接使用 `0 | 1`。当前这只是新表和 Swagger 契约基础，`GET /menu/all` 与 `/system/menu/*` 尚未开放，不能据此提前调用菜单管理接口。旧菜单表数据不会迁移，需要重新初始化菜单与角色关联。
+菜单数据模型按 v5.7.0 的 `catalog | menu | embedded | link | button` 五类型建立，并以 JSONB 保存可扩展 `meta`；字段直接采用 Vben 语义，Bigint 菜单 ID 保持字符串，状态直接使用 `0 | 1`。旧菜单表数据不会迁移，需要重新初始化菜单与角色关联。
+
+`GET /menu/all` 已可直接供 Vben 的 `getAllMenusApi()` 使用。普通用户只获得启用角色授权的路由，并自动补齐完整的启用父路由；超级角色获得全部有效路由。按钮只用于权限码，不会作为路由返回。禁用、父链缺失、循环或没有 `path` 的分支会被排除，树中每一级按 `meta.order` 升序、再按唯一 `name` 排序。响应仍由全局 `ResOp` 包装，OpenAPI 客户端解包后业务结果就是 `RouteRecordStringComponent[]`。
+
+`/system/menu/*` 管理接口仍未开放，不能据此提前调用菜单管理 CRUD。
 
 菜单、角色或用户授权发生变化后，后端写服务必须在事务提交后失效受影响用户的权限缓存。当前已提供按用户失效能力，具体写接口将在对应系统管理批次接入。
 
 ### 尚缺接口
 
-- 动态菜单 / 路由树；
 - 菜单、角色、用户的完整 CRUD；
 - 用户状态、密码修改，以及菜单/角色/用户写操作中的权限缓存失效挂钩；
 - 文件上传等 Vben 常用管理接口。

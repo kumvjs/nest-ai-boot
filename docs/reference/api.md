@@ -10,10 +10,20 @@
 | `POST` | `/auth/refresh` | 公开 | 从 Cookie 读取并轮换 Refresh Token |
 | `POST` | `/auth/logout` | JWT | 注销当前 Access Token，并撤销和清除请求中的 Refresh Token |
 | `GET` | `/auth/codes` | JWT | 返回当前用户有效的菜单/按钮 `authCode` 数组 |
+| `GET` | `/menu/all` | JWT | 按启用角色授权返回 Vben 动态路由树，并补齐有效父路由 |
 | `GET` | `/user/info` | JWT | 返回专用 DTO：`userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 与角色数组 |
 | `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
 
-`MenuController`、`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。菜单五类型实体、JSONB 元数据和 Vben Swagger DTO 属于后续接口的内部基础，不代表菜单 API 已发布。
+`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。`MenuController` 目前只发布运行时 `/menu/all`；`/system/menu/*` 管理 API 尚未发布。
+
+## 动态菜单
+
+```http
+GET /api/menu/all
+Authorization: Bearer eyJ...
+```
+
+普通用户通过启用角色与 `sys_role_menu` 获得菜单；超级角色不要求逐项映射。响应排除按钮、禁用记录以及无完整有效父链的记录，并递归按 `meta.order`、`name` 排序。返回业务数据只包含 Vben 路由字段，例如 `name`、`path`、`component`、`redirect`、`meta` 和 `children`，位于统一响应的 `data` 字段。
 
 ## 登录
 

@@ -1,4 +1,5 @@
 import { getMetadataArgsStorage } from 'typeorm'
+import SysRoleMenuEntity from '../../role/entities/role-menu.entity.js'
 import { MenuStatus, MenuType } from '../menu.types.js'
 import { SysMenuEntity } from './menu.entity.js'
 
@@ -63,5 +64,23 @@ describe('sys menu entity', () => {
       'uq_sys_menu_path',
     ]))
     expect(parentRelation?.options).toMatchObject({ onDelete: 'RESTRICT' })
+  })
+
+  it('uses constrained bigint role-menu relationships', () => {
+    const storage = getMetadataArgsStorage()
+    const relationColumns = storage.columns
+      .filter(column => column.target === SysRoleMenuEntity)
+      .filter(column => ['menuId', 'roleId'].includes(column.propertyName))
+    const unique = storage.uniques.find(
+      item => item.target === SysRoleMenuEntity && item.name === 'uq_sys_role_menu_role_menu',
+    )
+    const menuRelation = storage.relations.find(
+      relation => relation.target === SysRoleMenuEntity && relation.propertyName === 'menu',
+    )
+
+    expect(relationColumns).toHaveLength(2)
+    expect(relationColumns.every(column => column.options.type === 'bigint')).toBe(true)
+    expect(unique?.columns).toEqual(['roleId', 'menuId'])
+    expect(menuRelation?.options).toMatchObject({ onDelete: 'RESTRICT' })
   })
 })

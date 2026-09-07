@@ -95,3 +95,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Effective permission queries retain their existing role/super-role behavior, read one canonical `authCode` per row, filter numeric enabled status, and deduplicate role-join results.
 - [x] No menu endpoint or write business logic is exposed in this batch.
 - [x] DTO/entity/permission tests, type-checking, lint, Nest build, contract parser tests, locked Vben fixtures, docs, and diff checks pass.
+
+## Completed batch: M2.3
+
+- [x] `GET /menu/all` is authenticated, documented by Swagger, and remains wrapped by the global `ResOp<VbenRouteRecordDto[]>` contract.
+- [x] Enabled super users receive all enabled non-button routes; ordinary users receive routes granted through enabled roles and role-menu mappings.
+- [x] A granted descendant or button includes its complete enabled route-parent chain, while disabled/orphaned/cyclic/pathless branches and button nodes are not emitted.
+- [x] Route trees preserve Vben metadata and optional component/redirect fields, serialize bigint identity only internally, and sort recursively by `meta.order`, then unique name.
+- [x] `sys_role_menu` uses bigint foreign keys, unique role/menu pairs, indexes, and deletion policies compatible with the rebuilt tables.
+- [x] No system-menu list, existence check, CRUD, or cache invalidation write hook is implemented in this batch.
+- [x] Service/controller/schema tests, full regression tests, type-checking, lint, Nest build, contract fixtures, docs, and diff checks pass.

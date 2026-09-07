@@ -40,7 +40,7 @@ Paths omit this project's default `/api` global prefix.
 | POST | `/auth/logout` | invalidate login state and cookie/session | Exists |
 | GET | `/auth/codes` | button/action permission `string[]` | Exists; currently returns role codes |
 | GET | `/user/info` | `userId`, `username`, `realName`, `avatar`, `roles`, `homePath` and compatible profile fields | Exists; needs a dedicated adapter DTO |
-| GET | `/menu/all` | authorized `RouteRecordStringComponent[]` tree | Missing |
+| GET | `/menu/all` | authorized `RouteRecordStringComponent[]` tree | Implemented in M2.3 |
 | GET | `/timezone/getTimezoneOptions` | `Array<{ label, value }>` | Missing |
 | GET | `/timezone/getTimezone` | current user's IANA timezone or null | Missing |
 | POST | `/timezone/setTimezone` | `{ timezone }` | Missing |
@@ -143,7 +143,13 @@ M1.4 makes `/auth/codes` and `RbacGuard` use the same cache-backed resolver. A v
 
 M2.1–M2.2 use one Vben-native menu model rather than maintaining an old domain shape plus a translation adapter. Shared types cover `catalog`, `menu`, `embedded`, `link`, and `button`, numeric `0 | 1` status, and extensible route metadata. Dedicated request/response DTOs remain necessary for validation and Swagger, while the later service layer will build trees and handle the two form-only compatibility fields `activePath` and `linkSrc`.
 
-The fresh `sys_menu` stores only `pid`, `name`, `path`, `auth_code`, `type`, `component`, `redirect`, `meta`, and `status` beyond common audit fields. PostgreSQL JSONB absorbs Vben display/route metadata that does not require a relational constraint or index. Unique indexes protect name, non-null path, and non-null authCode; checks protect the five types and numeric status; the self-FK restricts parent deletion. There is deliberately no legacy migration or comma-separated permission compatibility. Existing menus and role-menu mappings must be recreated through the database bootstrap process. No menu route is exposed in this foundation batch.
+The fresh `sys_menu` stores only `pid`, `name`, `path`, `auth_code`, `type`, `component`, `redirect`, `meta`, and `status` beyond common audit fields. PostgreSQL JSONB absorbs Vben display/route metadata that does not require a relational constraint or index. Unique indexes protect name, non-null path, and non-null authCode; checks protect the five types and numeric status; the self-FK restricts parent deletion. There is deliberately no legacy migration or comma-separated permission compatibility. Existing menus and role-menu mappings must be recreated through the database bootstrap process.
+
+## Implemented dynamic menu resolution
+
+M2.3 publishes authenticated `GET /menu/all` at the root runtime path rather than under `/system`. Ordinary users resolve direct grants through enabled roles; enabled `super` receives all enabled menus without role-menu rows. The resolver computes the complete ancestor closure from the enabled menu set, so a directly granted route or button can make its required route parents visible. A branch is emitted only when it reaches a valid root, and buttons, missing-path nodes, disabled/missing ancestors, and cycles cannot leak into the route tree. Route objects contain only Vben runtime fields and are recursively sorted by numeric `meta.order` then globally unique `name`.
+
+`sys_role_menu` now uses bigint foreign keys, indexed columns, a unique role/menu pair, cascading role deletion, and restrictive menu deletion. This matches the fresh-table decision; no compatibility migration is provided. System-menu list, existence checks, CRUD validation, transactional writes, and cache invalidation remain later M2 batches.
 
 ## Browser security deployment model
 
