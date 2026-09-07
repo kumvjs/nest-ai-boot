@@ -36,12 +36,11 @@ export class AuthService {
     if (!user.verifyPassword(password))
       throw new BusinessException(ERROR_CODES.USER_PASSWORD_ERROR)
 
-    if (user) {
-      const { password_hash, ...result } = user
-      return result
-    }
+    if (!user.status)
+      throw new BusinessException(ERROR_CODES.USER_ACCOUNT_DISABLED)
 
-    return null
+    const { password_hash, psalt, ...result } = user
+    return result
   }
 
   /**

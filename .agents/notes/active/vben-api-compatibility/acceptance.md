@@ -76,3 +76,12 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Unsafe browser requests with an untrusted `Origin` receive HTTP 403 before authentication/business logic; trusted origins, preflight/safe methods, and non-browser requests without Origin remain supported.
 - [x] The Fastify adapter no longer fabricates an Origin header when clients omit it.
 - [x] Environment validation, controller Cookie contracts, trusted-origin behavior, docs, type-checking, lint, Nest build, contract parser tests, and locked Vben fixtures pass.
+
+## Completed batch: M1.6
+
+- [x] Unknown users and wrong passwords keep the same generic credential error; a disabled account is disclosed only after its submitted password verifies.
+- [x] A disabled user cannot generate Access/Refresh Tokens, seed login caches, or create a login-success log.
+- [x] Successful internal validation does not return `password_hash` or legacy `psalt`.
+- [x] No password hashes are bulk-converted and no new account/reset flow copies the MD5 implementation.
+- [x] M5 contains an actionable Argon2id-first mixed-hash migration, opportunistic rehash, inactive-account reset, session invalidation, rollout, and rollback checklist based on current OWASP guidance.
+- [x] Request-lifecycle/auth documentation, focused and full tests, type-checking, lint, Nest build, contract parser tests, and locked Vben fixtures pass.

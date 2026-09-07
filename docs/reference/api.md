@@ -37,6 +37,8 @@ Content-Type: application/json
 
 该对象位于统一响应的 `data` 字段。用户名至少 4 个字符，密码至少 6 个字符；初始化脚本要求超级管理员密码至少 8 个字符。
 
+只有启用用户可以登录。未知账号或密码错误使用同一个凭据错误；账号存在、密码正确但状态已停用时返回 `USER_ACCOUNT_DISABLED`，且不会签发 Token、写入登录缓存或记录成功登录日志。
+
 `/auth/refresh` 同样保持统一 `ResOp` 响应，新的 Access Token 位于 `data.accessToken`。前端生成的 OpenAPI 客户端负责统一解包 `data`，后端不会为 Vben mock 的裸字符串响应增加例外。
 
 ## 用户列表分页

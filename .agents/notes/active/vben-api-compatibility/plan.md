@@ -21,7 +21,7 @@ Acceptance: the same commit always generates the same normalized contract; a rou
 - [x] Add a dedicated `/user/info` response DTO mapping `id -> userId` and compatible profile fields; stop exposing `SysUserEntity` as the public contract.
 - [x] Change `/auth/codes` from role codes to effective menu/button permission codes and align Redis permission-cache invalidation.
 - [x] Define environment-specific CORS origin, HTTPS, SameSite, Secure, Domain, and CSRF behavior for credentialed requests.
-- [ ] Verify disabled users cannot log in and password hashing is scheduled for Argon2id/bcrypt migration rather than copied from the current MD5 approach.
+- [x] Verify disabled users cannot log in and password hashing is scheduled for Argon2id/bcrypt migration rather than copied from the current MD5 approach.
 
 Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI client can log in, unwrap `ResOp`, load user data/codes, refresh once with rotation, reject refresh replay, and log out.
 
@@ -70,7 +70,11 @@ Acceptance: role CRUD and permission assignment are transactional, protected rol
 - [ ] Implement transactional role assignment and targeted permission/session-cache invalidation.
 - [ ] Define soft delete, username reuse, status toggling, password create/reset, forced logout, and audit rules.
 - [ ] Prevent disabling/deleting the current last super administrator.
-- [ ] Migrate new/reset passwords to Argon2id or bcrypt; include a safe transition for existing hashes.
+- [ ] Add a reversible password-hash schema migration with an explicit algorithm marker; retain `legacy-md5` during rollout, make `psalt` nullable only when the dual verifier is ready, and store modern hashes in PHC format.
+- [ ] Select a maintained Argon2id implementation, benchmark production-class hardware against then-current OWASP minimums, and keep the parameters configurable/versioned; use bcrypt only as an explicitly reviewed fallback when Argon2id is unavailable.
+- [ ] Make create/reset paths Argon2id-only and opportunistically replace a verified legacy MD5 hash with a direct Argon2id hash of the submitted password before issuing tokens; never bulk-wrap MD5 hashes as if that removed the legacy weakness.
+- [ ] Increment persisted password/session version and revoke other sessions after a successful password upgrade/reset; make the update transactional and safe under concurrent logins.
+- [ ] Track only aggregate migration counts, force reset for legacy accounts inactive beyond the approved deadline, retain rollback support for mixed hashes during the rollout window, then remove the MD5 verifier and legacy salt after the measured migration threshold is met.
 
 Acceptance: user CRUD preserves RBAC and session invariants, returns Vben-compatible fields, and cannot remove the system's final administrative access path.
 

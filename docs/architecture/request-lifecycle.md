@@ -5,6 +5,7 @@
 ```text
 Fastify onRequest hook
   → TraceMiddleware
+  → TrustedOriginGuard
   → JwtAuthGuard
   → RbacGuard
   → ValidationPipe
@@ -15,6 +16,8 @@ Fastify onRequest hook
 ```
 
 任意阶段抛出的异常由 `CatchEverythingFilter` 处理。请求头中的 `x-trace-id` 或 `x-request-id` 会被复用，否则生成 UUID，并写回 `x-trace-id` 响应头。
+
+`TrustedOriginGuard` 仅处理 HTTP：GET/HEAD/OPTIONS 直接通过；带可信 Origin 的写请求通过；带非白名单 Origin 的写请求在认证和业务逻辑前返回 HTTP 403。没有 Origin 的 CLI/服务间调用继续可用。WebSocket 不经过该 Guard，握手与消息仍使用各自的 JWT/RBAC 链路。
 
 ### 全局参数校验
 

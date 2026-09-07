@@ -4,6 +4,7 @@ import type { LoginLogService } from '../system/log/services/login-log.service.j
 import type { MenuService } from '../system/menu/menu.service.js'
 import type { UserService } from '../user/user.service.js'
 import type { TokenService } from './services/token.service.js'
+import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
 import {
   authKeys,
   USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
@@ -15,7 +16,7 @@ jest.mock('#/config/index.js', () => ({
   securityConfig: { KEY: 'securityConfig' },
 }))
 
-describe('vben logout lifecycle', () => {
+describe('vben auth service contracts', () => {
   const cacheService = {
     delCache: jest.fn(),
     getCache: jest.fn(),
@@ -24,7 +25,15 @@ describe('vben logout lifecycle', () => {
   const menuService = {
     getPermissionsByUserId: jest.fn(),
   }
+  const userService = {
+    findUserForLogin: jest.fn(),
+  }
+  const loginLogService = {
+    create: jest.fn(),
+  }
   const tokenService = {
+    generateAccessToken: jest.fn(),
+    generateRefreshToken: jest.fn(),
     removeAccessTokenByJwtUuid: jest.fn(),
     revokeRefreshToken: jest.fn(),
   }
@@ -33,12 +42,12 @@ describe('vben logout lifecycle', () => {
   } as SecurityConfig
   const service = new AuthService(
     cacheService as unknown as CacheService,
-    {} as UserService,
+    userService as unknown as UserService,
     tokenService as unknown as TokenService,
     menuService as unknown as MenuService,
     security,
     {} as AppConfig,
-    {} as LoginLogService,
+    loginLogService as unknown as LoginLogService,
   )
 
   beforeEach(() => {
@@ -47,6 +56,10 @@ describe('vben logout lifecycle', () => {
     cacheService.delCache.mockResolvedValue(undefined)
     cacheService.getCache.mockResolvedValue(undefined)
     menuService.getPermissionsByUserId.mockResolvedValue([])
+    userService.findUserForLogin.mockResolvedValue(undefined)
+    loginLogService.create.mockResolvedValue(undefined)
+    tokenService.generateAccessToken.mockResolvedValue('access-token')
+    tokenService.generateRefreshToken.mockResolvedValue('refresh-token')
     tokenService.removeAccessTokenByJwtUuid.mockResolvedValue(undefined)
     tokenService.revokeRefreshToken.mockResolvedValue(undefined)
   })
@@ -69,6 +82,74 @@ describe('vben logout lifecycle', () => {
     )
     expect(tokenService.removeAccessTokenByJwtUuid).toHaveBeenCalledWith('access-token-uuid')
     expect(tokenService.revokeRefreshToken).toHaveBeenCalledWith('refresh-token')
+  })
+
+  it('keeps disabled status private when the submitted password is wrong', async () => {
+    userService.findUserForLogin.mockResolvedValue({
+      status: false,
+      verifyPassword: () => false,
+    })
+
+    await expect(
+      service.validateUser('disabled-user', 'wrong-password'),
+    ).rejects.toMatchObject({
+      errorCode: String(ERROR_CODES.USER_PASSWORD_ERROR.code),
+    })
+  })
+
+  it('uses the same credential error for an unknown user', async () => {
+    userService.findUserForLogin.mockResolvedValue(undefined)
+
+    await expect(
+      service.validateUser('unknown-user', 'any-password'),
+    ).rejects.toMatchObject({
+      errorCode: String(ERROR_CODES.USER_PASSWORD_ERROR.code),
+    })
+  })
+
+  it('rejects a disabled user before issuing tokens or writing login state', async () => {
+    userService.findUserForLogin.mockResolvedValue({
+      id: '42',
+      password_hash: 'legacy-hash',
+      psalt: 'legacy-salt',
+      status: false,
+      verifyPassword: () => true,
+    })
+
+    await expect(service.login(
+      'disabled-user',
+      'correct-password',
+      '127.0.0.1',
+      'contract-test',
+    )).rejects.toMatchObject({
+      errorCode: String(ERROR_CODES.USER_ACCOUNT_DISABLED.code),
+    })
+
+    expect(tokenService.generateAccessToken).not.toHaveBeenCalled()
+    expect(tokenService.generateRefreshToken).not.toHaveBeenCalled()
+    expect(cacheService.setCache).not.toHaveBeenCalled()
+    expect(loginLogService.create).not.toHaveBeenCalled()
+  })
+
+  it('removes password hash and legacy salt from validated login data', async () => {
+    userService.findUserForLogin.mockResolvedValue({
+      id: '42',
+      password_hash: 'legacy-hash',
+      psalt: 'legacy-salt',
+      status: true,
+      username: 'enabled-user',
+      verifyPassword: () => true,
+    })
+
+    const validated = await service.validateUser('enabled-user', 'correct-password')
+
+    expect(validated).toMatchObject({
+      id: '42',
+      status: true,
+      username: 'enabled-user',
+    })
+    expect(validated).not.toHaveProperty('password_hash')
+    expect(validated).not.toHaveProperty('psalt')
   })
 
   it('returns a cached empty permission list without querying PostgreSQL', async () => {

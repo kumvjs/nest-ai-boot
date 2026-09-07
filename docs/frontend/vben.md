@@ -183,6 +183,8 @@ Vben 请求客户端应以 `code === 0` 或 `success === true` 判断成功，�
 | 退出 | `POST /auth/logout` | Access Token 进入黑名单，并撤销/清除 Refresh Token |
 | 动态菜单 | 未实现 | 菜单实体存在，Controller 无接口 |
 
+登录响应业务码为 `20004` 时表示账号已停用，前端应展示后端消息并结束登录流程，不应继续调用刷新接口或写入 Access Token。
+
 登录请求示例：
 
 ```ts
