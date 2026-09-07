@@ -22,9 +22,14 @@
     "types": [
       "packages/types",
       "packages/@core/base/typings"
+    ],
+    "mockData": [
+      "apps/backend-mock/utils/mock-data.ts"
     ]
   },
   "snapshot": "contracts/vben/v5.7.0/api-contract.json",
+  "fixtures": "contracts/vben/v5.7.0/fixtures/contract-fixtures.json",
+  "warningRef": "main",
   "expected": {
     "frontendEndpoints": 31,
     "mockImplementedFrontendEndpoints": 22,

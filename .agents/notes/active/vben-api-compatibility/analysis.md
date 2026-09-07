@@ -110,3 +110,14 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 - Use main only as a scheduled early-warning comparison, never to silently update production compatibility.
 - Keep contract fixtures for the current and previous supported Vben stable baselines until all deployed frontends upgrade.
 - Keep additive changes under `/api`; introduce `/api/v2` only for unavoidable breaking domain contracts, not for every Vben minor release.
+
+## Implemented contract tooling
+
+M0 now provides a deterministic schema-version-2 contract snapshot, frozen behavior fixtures, and four repository commands:
+
+- `vben:contract:collect` regenerates the locked snapshot explicitly.
+- `vben:contract:check` proves that the locked source still produces the committed snapshot and valid fixtures.
+- `vben:contract:diff -- --ref <candidate>` classifies route, method, request, response, mock-coverage, and source-only changes without modifying the lock.
+- `vben:contract:warn-main` compares the configured moving warning ref and exits with code 2 when drift is found.
+
+The scheduled main warning is advisory: it can fail visibly, but it cannot update the production baseline. A stable-baseline change remains an explicit reviewed PR using the Vben upstream-upgrade template. At verification time, current `main` changed request signatures for `/auth/logout`, `/auth/refresh`, and `/upload`, response signatures for `/timezone/setTimezone` and `/upload`, plus upstream source data; this confirms why `main` must not be the compatibility lock.

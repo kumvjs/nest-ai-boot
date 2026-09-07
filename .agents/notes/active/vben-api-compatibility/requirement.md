@@ -18,12 +18,12 @@ Establish the authoritative Vben API scope and implement the versioned backlog i
 - Swagger/OpenAPI remains the endpoint reference; these artifacts hold research, decisions, and TODOs only.
 - Upstream selection must support deterministic builds and future API-change detection.
 
-## Non-goals for the current M0.1 batch
+## Completed M0 foundation boundary
 
-- No controller/service/entity/migration implementation.
-- No Vben source vendoring or runtime dependency installation.
-- No database table for demonstration-only endpoints.
-- No redesign of existing authentication unless a compatibility defect is proven during later contract testing.
+- M0 changes only contract collection, comparison, fixtures, and upgrade governance; it does not implement controllers, services, entities, or migrations.
+- Vben source is fetched into a temporary checkout and is neither vendored nor installed as a runtime dependency.
+- Demonstration-only endpoints do not receive database tables.
+- Existing authentication remains untouched until M1 contract tests prove a compatibility defect.
 
 ## Assumptions
 

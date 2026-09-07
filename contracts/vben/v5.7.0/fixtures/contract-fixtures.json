@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "successEnvelope": {
+    "code": 0,
+    "data": {
+      "accessToken": "fixture-access-token"
+    },
+    "message": "success",
+    "success": true,
+    "traceId": "fixture-trace-id"
+  },
+  "errorEnvelope": {
+    "code": 20003,
+    "data": null,
+    "errors": [
+      "账号或密码错误"
+    ],
+    "message": "账号或密码错误",
+    "success": false,
+    "traceId": "fixture-trace-id"
+  },
+  "pagination": {
+    "code": 0,
+    "data": {
+      "items": [
+        {
+          "id": "1001",
+          "name": "fixture-item"
+        }
+      ],
+      "total": 1
+    },
+    "message": "success",
+    "success": true,
+    "traceId": "fixture-trace-id"
+  },
+  "authentication": {
+    "unauthorized": {
+      "httpStatus": 401,
+      "body": {
+        "code": 401,
+        "data": null,
+        "message": "Unauthorized",
+        "success": false
+      }
+    },
+    "forbidden": {
+      "httpStatus": 403,
+      "body": {
+        "code": 10005,
+        "data": null,
+        "message": "Forbidden",
+        "success": false
+      }
+    },
+    "refresh": {
+      "request": {
+        "cookie": "refresh_token=fixture-old-refresh-token"
+      },
+      "response": {
+        "httpStatus": 200,
+        "setCookieContains": [
+          "refresh_token=fixture-new-refresh-token",
+          "HttpOnly"
+        ],
+        "rawData": "fixture-new-access-token"
+      }
+    }
+  },
+  "dynamicRoutes": {
+    "code": 0,
+    "data": [
+      {
+        "name": "FixtureDashboard",
+        "path": "/fixture-dashboard",
+        "component": "/dashboard/analytics/index",
+        "meta": {
+          "title": "Fixture dashboard",
+          "icon": "carbon:dashboard"
+        }
+      }
+    ],
+    "message": "success",
+    "success": true
+  },
+  "bigint": {
+    "rawJson": "{\"code\":0,\"data\":[{\"id\":123456789012345678901234567890}],\"message\":\"success\"}",
+    "expectedParsedId": "123456789012345678901234567890"
+  }
+}

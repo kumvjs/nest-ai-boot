@@ -7,10 +7,10 @@ This is an implementation backlog, not authorization to implement all items in o
 - [x] Add a machine-readable upstream lock containing repository, tag, full commit SHA, collected paths, and timestamp.
 - [x] Add a read-only collector that shallow-clones and sparse-checks out the locked Vben commit into a temporary/cache directory.
 - [x] Generate a snapshot for all 31 frontend-declared local API calls; track the two mock-only diagnostics separately.
-- [ ] Diff a candidate stable tag against the lock and report added, removed, renamed, method-changed, request-changed, response-changed, and mock-data-only changes.
-- [ ] Add an optional main-branch early-warning job that never updates the stable lock automatically.
-- [ ] Add upgrade-PR fields for compatibility class, schema/data migration, frontend rollout, rollback, and supported-baseline window.
-- [ ] Define frozen contract fixtures for success/error envelopes, `{ items,total }` pagination, 401/403, refresh cookies, dynamic routes, and bigint serialization.
+- [x] Diff a candidate stable tag against the lock and report added, removed, renamed, method-changed, request-changed, response-changed, and mock-data-only changes.
+- [x] Add an optional main-branch early-warning job that never updates the stable lock automatically.
+- [x] Add upgrade-PR fields for compatibility class, schema/data migration, frontend rollout, rollback, and supported-baseline window.
+- [x] Define frozen contract fixtures for success/error envelopes, `{ items,total }` pagination, 401/403, refresh cookies, dynamic routes, and bigint serialization.
 
 Acceptance: the same commit always generates the same normalized contract; a route present only in frontend callers is reported rather than lost; upstream changes cannot silently alter production behavior.
 

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "upstream": {
     "collectedAt": "2026-09-07T12:53:58+08:00",
     "commit": "63a38dce49ba109f61607994e21ba921d8e970e9",
@@ -18,26 +18,38 @@
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<string[]>",
           "source": "apps/web-antd/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<string[]>",
           "source": "apps/web-antdv-next/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<string[]>",
           "source": "apps/web-ele/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<string[]>",
           "source": "apps/web-naive/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<string[]>",
           "source": "apps/web-tdesign/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<string[]>",
           "source": "playground/src/api/core/auth.ts"
         }
       ],
@@ -46,33 +58,51 @@
         "apps/backend-mock/api/auth/codes.ts"
       ],
       "mockImplemented": true,
-      "path": "/auth/codes"
+      "path": "/auth/codes",
+      "mockContracts": [
+        {
+          "hash": "07462810c7e47c106035b1e92b9cd190fd54a6b0078e93b5440e9f67121bc26d",
+          "source": "apps/backend-mock/api/auth/codes.ts"
+        }
+      ]
     },
     {
       "category": "runtime",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "<AuthApi.LoginResult>",
           "source": "apps/web-antd/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "<AuthApi.LoginResult>",
           "source": "apps/web-antdv-next/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "<AuthApi.LoginResult>",
           "source": "apps/web-ele/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "<AuthApi.LoginResult>",
           "source": "apps/web-naive/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "<AuthApi.LoginResult>",
           "source": "apps/web-tdesign/src/api/core/auth.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "data, { withCredentials: true, }",
+          "responseSignature": "<AuthApi.LoginResult>",
           "source": "playground/src/api/core/auth.ts"
         }
       ],
@@ -81,33 +111,51 @@
         "apps/backend-mock/api/auth/login.post.ts"
       ],
       "mockImplemented": true,
-      "path": "/auth/login"
+      "path": "/auth/login",
+      "mockContracts": [
+        {
+          "hash": "b20b19c41822d8d14ce8221229d53785dd174ddb936f5bda89b30ed2a167405f",
+          "source": "apps/backend-mock/api/auth/login.post.ts"
+        }
+      ]
     },
     {
       "category": "runtime",
       "callers": [
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "",
           "source": "apps/web-antd/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "",
           "source": "apps/web-antdv-next/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "",
           "source": "apps/web-ele/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "",
           "source": "apps/web-naive/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "",
           "source": "apps/web-tdesign/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "null, { withCredentials: true, }",
+          "responseSignature": "",
           "source": "playground/src/api/core/auth.ts"
         }
       ],
@@ -116,33 +164,51 @@
         "apps/backend-mock/api/auth/logout.post.ts"
       ],
       "mockImplemented": true,
-      "path": "/auth/logout"
+      "path": "/auth/logout",
+      "mockContracts": [
+        {
+          "hash": "73ac32baeb5cc80141b99094be94bea9d1de72e7716c7cce52fa72d6a282abcb",
+          "source": "apps/backend-mock/api/auth/logout.post.ts"
+        }
+      ]
     },
     {
       "category": "runtime",
       "callers": [
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "<AuthApi.RefreshTokenResult>",
           "source": "apps/web-antd/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "<AuthApi.RefreshTokenResult>",
           "source": "apps/web-antdv-next/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "<AuthApi.RefreshTokenResult>",
           "source": "apps/web-ele/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "<AuthApi.RefreshTokenResult>",
           "source": "apps/web-naive/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "{ withCredentials: true, }",
+          "responseSignature": "<AuthApi.RefreshTokenResult>",
           "source": "apps/web-tdesign/src/api/core/auth.ts"
         },
         {
           "client": "baseRequestClient",
+          "requestSignature": "null, { withCredentials: true, },",
+          "responseSignature": "<AuthApi.RefreshTokenResult>",
           "source": "playground/src/api/core/auth.ts"
         }
       ],
@@ -151,13 +217,21 @@
         "apps/backend-mock/api/auth/refresh.post.ts"
       ],
       "mockImplemented": true,
-      "path": "/auth/refresh"
+      "path": "/auth/refresh",
+      "mockContracts": [
+        {
+          "hash": "44c580ab8ff3185195f02c813b61f97a528dd03eaee2660c9062e8eb6d72d15e",
+          "source": "apps/backend-mock/api/auth/refresh.post.ts"
+        }
+      ]
     },
     {
       "category": "playground",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "",
           "source": "playground/src/api/examples/json-bigint.ts"
         }
       ],
@@ -166,33 +240,51 @@
         "apps/backend-mock/api/demo/bigint.ts"
       ],
       "mockImplemented": true,
-      "path": "/demo/bigint"
+      "path": "/demo/bigint",
+      "mockContracts": [
+        {
+          "hash": "c6182dfb7312bb2b650729f13a359372f0f5c8843d59cb1ee0660bddde5f198f",
+          "source": "apps/backend-mock/api/demo/bigint.ts"
+        }
+      ]
     },
     {
       "category": "runtime",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<RouteRecordStringComponent[]>",
           "source": "apps/web-antd/src/api/core/menu.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<RouteRecordStringComponent[]>",
           "source": "apps/web-antdv-next/src/api/core/menu.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<RouteRecordStringComponent[]>",
           "source": "apps/web-ele/src/api/core/menu.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<RouteRecordStringComponent[]>",
           "source": "apps/web-naive/src/api/core/menu.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<RouteRecordStringComponent[]>",
           "source": "apps/web-tdesign/src/api/core/menu.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<RouteRecordStringComponent[]>",
           "source": "playground/src/api/core/menu.ts"
         }
       ],
@@ -201,17 +293,27 @@
         "apps/backend-mock/api/menu/all.ts"
       ],
       "mockImplemented": true,
-      "path": "/menu/all"
+      "path": "/menu/all",
+      "mockContracts": [
+        {
+          "hash": "fb625afc954bb7a4caad0beceb371b942cf35fcf6624367a1b54bc93a2f2506a",
+          "source": "apps/backend-mock/api/menu/all.ts"
+        }
+      ]
     },
     {
       "category": "playground",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ params, paramsSerializer: type, responseReturn: 'raw', }",
+          "responseSignature": "",
           "source": "playground/src/api/examples/params.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "{ params: { status } }",
+          "responseSignature": "",
           "source": "playground/src/api/examples/status.ts"
         }
       ],
@@ -220,13 +322,21 @@
         "apps/backend-mock/api/status.ts"
       ],
       "mockImplemented": true,
-      "path": "/status"
+      "path": "/status",
+      "mockContracts": [
+        {
+          "hash": "888b93f86cfb6a9b97d5dbb4fffe64a94a1ceb2031400e3348a4c48e4be5c025",
+          "source": "apps/backend-mock/api/status.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/dept.ts"
         }
       ],
@@ -235,13 +345,21 @@
         "apps/backend-mock/api/system/dept/.post.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/dept"
+      "path": "/system/dept",
+      "mockContracts": [
+        {
+          "hash": "415f7c6ca6ca13eca1c4d174ba2dcc3921dbd353d1362bca0d21451b867546af",
+          "source": "apps/backend-mock/api/system/dept/.post.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "",
           "source": "playground/src/api/system/dept.ts"
         }
       ],
@@ -250,13 +368,21 @@
         "apps/backend-mock/api/system/dept/[id].delete.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/dept/:id"
+      "path": "/system/dept/:id",
+      "mockContracts": [
+        {
+          "hash": "0c5ff8221dcca9ddd13bd06ff317a88ec05b94f604727a2d90aeab55561f0c05",
+          "source": "apps/backend-mock/api/system/dept/[id].delete.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/dept.ts"
         }
       ],
@@ -265,13 +391,21 @@
         "apps/backend-mock/api/system/dept/[id].put.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/dept/:id"
+      "path": "/system/dept/:id",
+      "mockContracts": [
+        {
+          "hash": "d29df838b0e1662e03638a28dd93a5b7f1f3c41593d02cecc2b3d5fe5a8316b5",
+          "source": "apps/backend-mock/api/system/dept/[id].put.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<Array<SystemDeptApi.SystemDept>>",
           "source": "playground/src/api/system/dept.ts"
         }
       ],
@@ -280,52 +414,69 @@
         "apps/backend-mock/api/system/dept/list.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/dept/list"
+      "path": "/system/dept/list",
+      "mockContracts": [
+        {
+          "hash": "a8176a9b78026f3c1e1c38d8b600fd5e43994b8e28eca335678a558ec293026a",
+          "source": "apps/backend-mock/api/system/dept/list.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/menu.ts"
         }
       ],
       "method": "POST",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/menu"
+      "path": "/system/menu",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "",
           "source": "playground/src/api/system/menu.ts"
         }
       ],
       "method": "DELETE",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/menu/:id"
+      "path": "/system/menu/:id",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/menu.ts"
         }
       ],
       "method": "PUT",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/menu/:id"
+      "path": "/system/menu/:id",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<Array<SystemMenuApi.SystemMenu>>",
           "source": "playground/src/api/system/menu.ts"
         }
       ],
@@ -334,13 +485,21 @@
         "apps/backend-mock/api/system/menu/list.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/menu/list"
+      "path": "/system/menu/list",
+      "mockContracts": [
+        {
+          "hash": "f6e29fc5a0f4577fea56f09567379dba5f5cefab0951886349a3b328599204b9",
+          "source": "apps/backend-mock/api/system/menu/list.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ params: { id, name }, }",
+          "responseSignature": "<boolean>",
           "source": "playground/src/api/system/menu.ts"
         }
       ],
@@ -349,13 +508,21 @@
         "apps/backend-mock/api/system/menu/name-exists.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/menu/name-exists"
+      "path": "/system/menu/name-exists",
+      "mockContracts": [
+        {
+          "hash": "74d54a5008399949b2c6fac412b1d8ce595b8c63605d272c0ef87075ff800fe3",
+          "source": "apps/backend-mock/api/system/menu/name-exists.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ params: { id, path }, }",
+          "responseSignature": "<boolean>",
           "source": "playground/src/api/system/menu.ts"
         }
       ],
@@ -364,52 +531,69 @@
         "apps/backend-mock/api/system/menu/path-exists.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/menu/path-exists"
+      "path": "/system/menu/path-exists",
+      "mockContracts": [
+        {
+          "hash": "4e23a3fed1ad7c393f03d389261aa10a55a2dcd9db92c3a1bd21f2a58ab949c7",
+          "source": "apps/backend-mock/api/system/menu/path-exists.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/role.ts"
         }
       ],
       "method": "POST",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/role"
+      "path": "/system/role",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "",
           "source": "playground/src/api/system/role.ts"
         }
       ],
       "method": "DELETE",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/role/:id"
+      "path": "/system/role/:id",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/role.ts"
         }
       ],
       "method": "PUT",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/role/:id"
+      "path": "/system/role/:id",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ params },",
+          "responseSignature": "<Array<SystemRoleApi.SystemRole>>",
           "source": "playground/src/api/system/role.ts"
         }
       ],
@@ -418,52 +602,69 @@
         "apps/backend-mock/api/system/role/list.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/role/list"
+      "path": "/system/role/list",
+      "mockContracts": [
+        {
+          "hash": "4af7be63bc11b1ddfc975a4d7c41ec623966ee4a5924619224848c360120f6f4",
+          "source": "apps/backend-mock/api/system/role/list.ts"
+        }
+      ]
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/user.ts"
         }
       ],
       "method": "POST",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/user"
+      "path": "/system/user",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "",
           "source": "playground/src/api/system/user.ts"
         }
       ],
       "method": "DELETE",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/user/:id"
+      "path": "/system/user/:id",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "data",
+          "responseSignature": "",
           "source": "playground/src/api/system/user.ts"
         }
       ],
       "method": "PUT",
       "mockHandlers": [],
       "mockImplemented": false,
-      "path": "/system/user/:id"
+      "path": "/system/user/:id",
+      "mockContracts": []
     },
     {
       "category": "system",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ params },",
+          "responseSignature": "<Array<SystemUserApi.SystemUser>>",
           "source": "playground/src/api/system/user.ts"
         }
       ],
@@ -472,13 +673,21 @@
         "apps/backend-mock/api/system/user/list.ts"
       ],
       "mockImplemented": true,
-      "path": "/system/user/list"
+      "path": "/system/user/list",
+      "mockContracts": [
+        {
+          "hash": "8bd26e2531c15268004e34dba7552e33e315a418e0e52f1327ccc955189f5f1b",
+          "source": "apps/backend-mock/api/system/user/list.ts"
+        }
+      ]
     },
     {
       "category": "playground",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ params }",
+          "responseSignature": "",
           "source": "playground/src/api/examples/table.ts"
         }
       ],
@@ -487,13 +696,21 @@
         "apps/backend-mock/api/table/list.ts"
       ],
       "mockImplemented": true,
-      "path": "/table/list"
+      "path": "/table/list",
+      "mockContracts": [
+        {
+          "hash": "58ac45e3bcda196e35f8347aa4216239e33a14d9a6b22f0374965df8d87de299",
+          "source": "apps/backend-mock/api/table/list.ts"
+        }
+      ]
     },
     {
       "category": "preference",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<null | string | undefined>",
           "source": "playground/src/api/core/timezone.ts"
         }
       ],
@@ -502,13 +719,21 @@
         "apps/backend-mock/api/timezone/getTimezone.ts"
       ],
       "mockImplemented": true,
-      "path": "/timezone/getTimezone"
+      "path": "/timezone/getTimezone",
+      "mockContracts": [
+        {
+          "hash": "96aa9dd196ac3ca5f26adc14d94611ade69045d2e993b4014dfc7dfdfecc6ddc",
+          "source": "apps/backend-mock/api/timezone/getTimezone.ts"
+        }
+      ]
     },
     {
       "category": "preference",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "< { label: string; value: string; }[] >",
           "source": "playground/src/api/core/timezone.ts"
         }
       ],
@@ -517,13 +742,21 @@
         "apps/backend-mock/api/timezone/getTimezoneOptions.ts"
       ],
       "mockImplemented": true,
-      "path": "/timezone/getTimezoneOptions"
+      "path": "/timezone/getTimezoneOptions",
+      "mockContracts": [
+        {
+          "hash": "78e4bebf3dc48f30146219fd5e712a673e633696b437dede6fbbc7b217bc0688",
+          "source": "apps/backend-mock/api/timezone/getTimezoneOptions.ts"
+        }
+      ]
     },
     {
       "category": "preference",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ timezone }",
+          "responseSignature": "",
           "source": "playground/src/api/core/timezone.ts"
         }
       ],
@@ -532,13 +765,21 @@
         "apps/backend-mock/api/timezone/setTimezone.ts"
       ],
       "mockImplemented": true,
-      "path": "/timezone/setTimezone"
+      "path": "/timezone/setTimezone",
+      "mockContracts": [
+        {
+          "hash": "5059ca5f0913b086a7590ac7340973f501bbff911a7109b70daf359b35551a0d",
+          "source": "apps/backend-mock/api/timezone/setTimezone.ts"
+        }
+      ]
     },
     {
       "category": "playground",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "{ file }",
+          "responseSignature": "",
           "source": "playground/src/api/examples/upload.ts"
         }
       ],
@@ -547,33 +788,51 @@
         "apps/backend-mock/api/upload.ts"
       ],
       "mockImplemented": true,
-      "path": "/upload"
+      "path": "/upload",
+      "mockContracts": [
+        {
+          "hash": "08c8810cdb854a9eed10790e81175959f8cc3f72087c5a4619ab531d5bc53e83",
+          "source": "apps/backend-mock/api/upload.ts"
+        }
+      ]
     },
     {
       "category": "runtime",
       "callers": [
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<UserInfo>",
           "source": "apps/web-antd/src/api/core/user.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<UserInfo>",
           "source": "apps/web-antdv-next/src/api/core/user.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<UserInfo>",
           "source": "apps/web-ele/src/api/core/user.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<UserInfo>",
           "source": "apps/web-naive/src/api/core/user.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<UserInfo>",
           "source": "apps/web-tdesign/src/api/core/user.ts"
         },
         {
           "client": "requestClient",
+          "requestSignature": "",
+          "responseSignature": "<UserInfo>",
           "source": "playground/src/api/core/user.ts"
         }
       ],
@@ -582,7 +841,13 @@
         "apps/backend-mock/api/user/info.ts"
       ],
       "mockImplemented": true,
-      "path": "/user/info"
+      "path": "/user/info",
+      "mockContracts": [
+        {
+          "hash": "f21fa0cf80e9e780c4da78b11b02ef41d3d6e83b1b33f8013ee1812cdc016bbf",
+          "source": "apps/backend-mock/api/user/info.ts"
+        }
+      ]
     }
   ],
   "mockOnlyRoutes": [
@@ -622,6 +887,7 @@
     "apps/backend-mock/api/timezone/setTimezone.ts": "5059ca5f0913b086a7590ac7340973f501bbff911a7109b70daf359b35551a0d",
     "apps/backend-mock/api/upload.ts": "08c8810cdb854a9eed10790e81175959f8cc3f72087c5a4619ab531d5bc53e83",
     "apps/backend-mock/api/user/info.ts": "f21fa0cf80e9e780c4da78b11b02ef41d3d6e83b1b33f8013ee1812cdc016bbf",
+    "apps/backend-mock/utils/mock-data.ts": "839f211ff6ff427dcd08a72f6fcc0e4559f60a12428d61253f01d005d59ce186",
     "apps/web-antd/src/api/core/auth.ts": "5f1d1defda07fd1e1ccae2bb65bf74f99584d53a157de3d5d1cda591e8adc62d",
     "apps/web-antd/src/api/core/index.ts": "a61680f2c36cea3b2e3fc0f2c9512f41cfc850bb37fb8c0733ae35835adf2aee",
     "apps/web-antd/src/api/core/menu.ts": "1a486947984c064d94f39dda19399416261a839054b13e0e6a50938f4b9f3c18",
@@ -642,6 +908,22 @@
     "apps/web-tdesign/src/api/core/index.ts": "a61680f2c36cea3b2e3fc0f2c9512f41cfc850bb37fb8c0733ae35835adf2aee",
     "apps/web-tdesign/src/api/core/menu.ts": "1a486947984c064d94f39dda19399416261a839054b13e0e6a50938f4b9f3c18",
     "apps/web-tdesign/src/api/core/user.ts": "5f6054e33d1a9125d345a1356463798d24101da92594e9de8660ec3a847fd0cb",
+    "packages/@core/base/typings/package.json": "6c48e9fae5d1a082520e0507b89f490fdfc5bbc5e865d7978e7d76539c5f7d6d",
+    "packages/@core/base/typings/src/app.d.ts": "a17376329fbb6844e4f858f0fa5eeb04eb41a243186a1ce1b243c30f7715efa2",
+    "packages/@core/base/typings/src/basic.d.ts": "91aadc6c22c61b5ea8f5c3a11b46cbef40d082dbd1aadd93f024ade51f9324b8",
+    "packages/@core/base/typings/src/helper.d.ts": "7cd85776a23c202ddb9f87948171c752ba5cb65a639fbd97d5c7a455a086dbd6",
+    "packages/@core/base/typings/src/index.ts": "a75b8d76517dee3097592c9bc17e80eeb25d6408435518c905cb2097c962b235",
+    "packages/@core/base/typings/src/menu-record.ts": "395ed1192148a17b42036caf54893114c5081b7f4186e222e5e65a54204fe313",
+    "packages/@core/base/typings/src/tabs.ts": "9637259ff41b0e8a39ea89c16be334a4544bfe422d92fc150a12e7d548c1e490",
+    "packages/@core/base/typings/src/vue-router.d.ts": "5139428c32ea8c245530c14ac0a7cb246cdb2c19a2668b255892bf2cdb9cd5de",
+    "packages/@core/base/typings/tsconfig.json": "63f3f33d0421cd22c6ef2f77307d6799602e49673c655d5db2e2b4bd6aa9ef7d",
+    "packages/@core/base/typings/tsdown.config.ts": "4c369c4b499ff105f9bd3408cc26f73d6a054e7af6dc0dbe37909686a2bf83d3",
+    "packages/@core/base/typings/vue-router.d.ts": "b37cb355d961eac27945aef444705d3580b83bd766984b024e67d6ad0d7f699f",
+    "packages/types/global.d.ts": "6c295f9f128d6c809ac5b24a5ed465889139966740535c77ad83fd62dddd7ac7",
+    "packages/types/package.json": "2114c08e375afdf8b34a7c424178b0b57976f37d069e9061a174bfe44ffe8b97",
+    "packages/types/src/index.ts": "047f369014a278f5fd9e70724304c06b9beef33a35bfd0c4817f1abe9ddeb5ca",
+    "packages/types/src/user.ts": "4a589566a86296b800a19297d0c7776dbac16a676ad92d9b29e8bb6fd9c3308a",
+    "packages/types/tsconfig.json": "5d3f1fa65579b7cbff3b5d6a9132dc50ca98745210c6088ad535faec5b5b55c7",
     "playground/src/api/core/auth.ts": "1fba06a67e9ee8167d60d822ba35593f066f6b4e32e884614f369c21e4c466ac",
     "playground/src/api/core/index.ts": "c9d216ba161458bfeeb76dd2b4e8c5169073bcae798b752bedf133a20194dd05",
     "playground/src/api/core/menu.ts": "1a486947984c064d94f39dda19399416261a839054b13e0e6a50938f4b9f3c18",
@@ -660,6 +942,18 @@
     "playground/src/api/system/index.ts": "a9d517f7ed712bb2cfea1497972097ff3c23591e4ebdc3dc4338e60c60b3b943",
     "playground/src/api/system/menu.ts": "3d95ca83a27a60a919c9cf13cab842aef309bb0654fe2b4599862b9b5d44c147",
     "playground/src/api/system/role.ts": "f5aff1416af76d51085dc85863d7accfe2d3d44375179939f3075ccede0c1aa0",
-    "playground/src/api/system/user.ts": "1655dcb80cb504fc51c95dde5c64be7df8d782b702ddab086f6377665571c4ea"
+    "playground/src/api/system/user.ts": "1655dcb80cb504fc51c95dde5c64be7df8d782b702ddab086f6377665571c4ea",
+    "playground/src/views/system/dept/data.ts": "b8b1a4e2c8bde20a42e6d1544060358a6c11201677ae846419f64e5f4042cd79",
+    "playground/src/views/system/dept/list.vue": "a93fad20a633c99814e3420225e11022d4be0eccdd5364b78334934b6067c575",
+    "playground/src/views/system/dept/modules/form.vue": "95c2faa2f30e7bfaf11db41a44bc697f2633dd81de10f026c1caee43a7314f63",
+    "playground/src/views/system/menu/data.ts": "48309160fb4c00457e85e7478abdc8bcce4e453852e3a3272ecc517cf00be08d",
+    "playground/src/views/system/menu/list.vue": "376e8144a14276ba24c4865292d1da00f873720863c46410a59633cefe6747ff",
+    "playground/src/views/system/menu/modules/form.vue": "5e5292a756639447e1723e1772e1fb29c629ee67a3e5e21f1c6940cb155149b8",
+    "playground/src/views/system/role/data.ts": "10e026b0935079f1b4854530e6ebb0d123b31f435b7e45b9acf21520671c4cbe",
+    "playground/src/views/system/role/list.vue": "e1f90aba085fab15fd30b5583de9a769b3435e653ab2659f0908d65e718019b6",
+    "playground/src/views/system/role/modules/form.vue": "ec79dec26998e2e3ce46d0a4972931550951c6b8c93d96bb6ebfebfc3514378d",
+    "playground/src/views/system/user/data.ts": "f0288ed93fe90bc465ce25ebd76bc25dc089b2aa12a933c25b80188c194bcb4f",
+    "playground/src/views/system/user/list.vue": "6e820d121e13cb7990605574687d937391cf062a6803f3455031e614964c3f51",
+    "playground/src/views/system/user/modules/form.vue": "795fcc33b67e2a01130853129d9385e71969f32a77c2f4be812ae74f76f494d3"
   }
 }

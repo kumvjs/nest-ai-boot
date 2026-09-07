@@ -1,0 +1,21 @@
+name: Vben contract main warning
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  compare-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Compare locked Vben contract with main
+        run: node scripts/vben-contract.mjs warn-main --ref main
