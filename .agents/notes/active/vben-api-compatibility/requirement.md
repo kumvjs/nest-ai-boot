@@ -17,6 +17,7 @@ Establish the authoritative Vben API scope and implement the versioned backlog i
 - A route returning mock-shaped data is not complete: production work needs schema, constraints, transactions, authorization, cache invalidation, error behavior, migrations, and tests.
 - Swagger/OpenAPI remains the endpoint reference; these artifacts hold research, decisions, and TODOs only.
 - Upstream selection must support deterministic builds and future API-change detection.
+- Preserve the backend's global `ResOp<T>` wire envelope for every JSON endpoint, including `/auth/refresh`. The project frontend uses its generated OpenAPI client plus the response interceptor to unwrap `data`; upstream mock responses are evidence, not authorization to bypass the backend envelope.
 
 ## Completed M0 foundation boundary
 

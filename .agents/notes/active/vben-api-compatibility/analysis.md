@@ -36,7 +36,7 @@ Paths omit this project's default `/api` global prefix.
 | Method | Path | Contract summary | Current project |
 | --- | --- | --- | --- |
 | POST | `/auth/login` | `{ username, password } -> { accessToken }`; refresh cookie | Exists |
-| POST | `/auth/refresh` | refresh cookie -> raw access-token response expected by Vben base client | Exists; response compatibility needs a test |
+| POST | `/auth/refresh` | refresh cookie -> project contract `ResOp<{ accessToken }>`; generated OpenAPI client unwraps `data` | Exists; preserve envelope and contract-test it |
 | POST | `/auth/logout` | invalidate login state and cookie/session | Exists |
 | GET | `/auth/codes` | button/action permission `string[]` | Exists; currently returns role codes |
 | GET | `/user/info` | `userId`, `username`, `realName`, `avatar`, `roles`, `homePath` and compatible profile fields | Exists; needs a dedicated adapter DTO |
@@ -83,9 +83,9 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 
 ## Contract gaps in the existing backend
 
-- The global success envelope is broadly compatible with Vben's `code === 0` and `data` extraction, but refresh uses `baseRequestClient` without the normal data-unwrapping interceptor; the current wrapped refresh body may be interpreted as the token object.
+- Official Vben v5.7.0 uses a bare `baseRequestClient` for refresh and its mock returns a raw token. This project intentionally does not copy that exception: the backend keeps `ResOp<{ accessToken }>` and the project frontend's Hey API/OpenAPI wrapper plus `defaultResponseInterceptor` unwraps the `data` field. Contract tests must protect this project-specific adapter boundary.
 - `/auth/codes` returns login-context role codes, while Vben expects action/button codes. The database source should be effective menu permissions.
-- `/user/info` exposes an entity-shaped object with `id`; Vben types expect `userId` plus profile fields. Use a dedicated response DTO.
+- `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated response DTO with `userId`, `username`, `realName`, and `roles`; avatar, home-path, and description remain pending until they have an approved persistence source.
 - `nestjs-paginate` returns a shape like `{ data, meta, links }`; Vben system tables expect unwrapped `{ items, total }` and use `page/pageSize`.
 - Existing `sys_menu` lacks the complete five-type Vben model and extensible route metadata.
 - Existing role/menu services and controllers are partial; all writes need transactional relationship replacement and cache invalidation.
@@ -121,3 +121,12 @@ M0 now provides a deterministic schema-version-2 contract snapshot, frozen behav
 - `vben:contract:warn-main` compares the configured moving warning ref and exits with code 2 when drift is found.
 
 The scheduled main warning is advisory: it can fail visibly, but it cannot update the production baseline. A stable-baseline change remains an explicit reviewed PR using the Vben upstream-upgrade template. At verification time, current `main` changed request signatures for `/auth/logout`, `/auth/refresh`, and `/upload`, response signatures for `/timezone/setTimezone` and `/upload`, plus upstream source data; this confirms why `main` must not be the compatibility lock.
+
+## Response-envelope decision
+
+`ResOp<T>` is the canonical backend JSON response format. Controllers return their business DTO and the global transform interceptor emits `{ code, data, message, success, traceId }`. The project Vben frontend generates types and calls from Swagger, then unwraps `data` centrally in its OpenAPI client. Consequently:
+
+- no Vben endpoint should opt out of the transform merely to imitate `backend-mock`;
+- `/auth/login` and `/auth/refresh` both expose `ResOp<LoginTokenResponseDto>` on the wire;
+- contract tests assert both the business DTO and its `ResOp` envelope;
+- any upstream raw-response special case is handled in the frontend adapter, not by fragmenting backend response conventions.

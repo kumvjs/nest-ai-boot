@@ -10,7 +10,7 @@
 | `POST` | `/auth/refresh` | 公开 | 从 Cookie 读取并轮换 Refresh Token |
 | `POST` | `/auth/logout` | JWT | 注销当前 Access Token |
 | `GET` | `/auth/codes` | JWT | 返回当前登录上下文的角色 code 数组 |
-| `GET` | `/user/info` | JWT | 返回当前用户信息、`realName` 与角色数组 |
+| `GET` | `/user/info` | JWT | 返回专用用户信息 DTO：`userId`、`username`、`realName` 与角色数组 |
 | `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
 
 `MenuController`、`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。
@@ -36,6 +36,8 @@ Content-Type: application/json
 ```
 
 该对象位于统一响应的 `data` 字段。用户名至少 4 个字符，密码至少 6 个字符；初始化脚本要求超级管理员密码至少 8 个字符。
+
+`/auth/refresh` 同样保持统一 `ResOp` 响应，新的 Access Token 位于 `data.accessToken`。前端生成的 OpenAPI 客户端负责统一解包 `data`，后端不会为 Vben mock 的裸字符串响应增加例外。
 
 ## 用户列表分页
 

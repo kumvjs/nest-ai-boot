@@ -1,3 +1,4 @@
+import type { UserInfoResponseDto } from './dto/user-info-response.dto.js'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -48,12 +49,13 @@ export class UserService {
     return u
   }
 
-  async info(id: string) {
+  async info(id: string): Promise<UserInfoResponseDto> {
     const u = await this.getUserById(id)
     const roles = await this.userRoleService.getUserRoleCodes(id)
     return {
-      ...u,
-      realName: u?.nickname,
+      userId: u.id,
+      username: u.username,
+      realName: u.nickname,
       roles,
     }
   }

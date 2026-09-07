@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "types": [
+      "jest",
+      "node"
+    ],
+    "resolvePackageJsonExports": false
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "src/shared/cache/types.d.ts",
+    "types/**/*.d.ts"
+  ]
+}

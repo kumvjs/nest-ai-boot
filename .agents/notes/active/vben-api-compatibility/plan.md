@@ -16,14 +16,14 @@ Acceptance: the same commit always generates the same normalized contract; a rou
 
 ## M1 — Stabilize existing authentication compatibility
 
-- [ ] Add Vben v5.7.0 contract tests for existing `/auth/login`, `/auth/refresh`, `/auth/logout`, and `/user/info`; do not rewrite working login logic.
-- [ ] Verify/fix the refresh response expected by Vben `baseRequestClient`, including token rotation, replay rejection, cookie replacement, and logout invalidation.
+- [x] Add Vben v5.7.0-derived contract tests for existing `/auth/login`, `/auth/refresh`, `/auth/logout`, and `/user/info`; assert the project's canonical `ResOp<T>` envelope and do not rewrite working login logic.
+- [ ] Verify/fix refresh behavior through the generated OpenAPI client contract `ResOp<{ accessToken }>`, including token rotation, replay rejection, cookie replacement, and logout invalidation; never introduce a raw-response exception.
 - [ ] Add a dedicated `/user/info` response DTO mapping `id -> userId` and compatible profile fields; stop exposing `SysUserEntity` as the public contract.
 - [ ] Change `/auth/codes` from role codes to effective menu/button permission codes and align Redis permission-cache invalidation.
 - [ ] Define environment-specific CORS origin, HTTPS, SameSite, Secure, Domain, and CSRF behavior for credentialed requests.
 - [ ] Verify disabled users cannot log in and password hashing is scheduled for Argon2id/bcrypt migration rather than copied from the current MD5 approach.
 
-Acceptance: an unmodified Vben v5.7.0 request client can log in, load user data/codes, refresh once with rotation, reject refresh replay, and log out.
+Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI client can log in, unwrap `ResOp`, load user data/codes, refresh once with rotation, reject refresh replay, and log out.
 
 ## M2 — Dynamic menu and permission backbone
 

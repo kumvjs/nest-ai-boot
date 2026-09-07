@@ -3,7 +3,7 @@ import { ApiOperation } from '@nestjs/swagger'
 import { ApiResult } from '#/common/decorators/api-result.decorator.js'
 import { CurrentUser } from '#/common/decorators/current-user.decorator.js'
 import { ApiSecurityAuth } from '#/common/decorators/swagger.decorator.js'
-import { SysUserEntity } from './entities/user.entity.js'
+import { UserInfoResponseDto } from './dto/user-info-response.dto.js'
 import { UserService } from './user.service.js'
 
 @Controller('user')
@@ -13,8 +13,8 @@ export class UserController {
 
   @Get('info')
   @ApiOperation({ summary: '用户信息' })
-  @ApiResult({ type: SysUserEntity })
-  async info(@CurrentUser() user: LoginUserContext) {
+  @ApiResult({ type: UserInfoResponseDto })
+  async info(@CurrentUser() user: LoginUserContext): Promise<UserInfoResponseDto> {
     return this.userService.info(user.uid)
   }
 }

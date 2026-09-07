@@ -63,7 +63,15 @@
           "refresh_token=fixture-new-refresh-token",
           "HttpOnly"
         ],
-        "rawData": "fixture-new-access-token"
+        "body": {
+          "code": 0,
+          "data": {
+            "accessToken": "fixture-new-access-token"
+          },
+          "message": "success",
+          "success": true,
+          "traceId": "fixture-trace-id"
+        }
       }
     }
   },

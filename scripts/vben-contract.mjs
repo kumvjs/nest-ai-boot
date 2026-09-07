@@ -632,7 +632,8 @@ function validateFixtures(lock) {
     [fixtures.authentication?.unauthorized?.httpStatus === 401, 'unauthorized fixture status must be 401'],
     [fixtures.authentication?.forbidden?.httpStatus === 403, 'forbidden fixture status must be 403'],
     [fixtures.authentication?.refresh?.response?.setCookieContains?.includes('HttpOnly'), 'refresh fixture must require HttpOnly'],
-    [typeof fixtures.authentication?.refresh?.response?.rawData === 'string', 'refresh fixture rawData must be a string'],
+    [fixtures.authentication?.refresh?.response?.body?.code === 0, 'refresh fixture must use the success envelope'],
+    [typeof fixtures.authentication?.refresh?.response?.body?.data?.accessToken === 'string', 'refresh fixture must contain data.accessToken'],
     [Array.isArray(fixtures.dynamicRoutes?.data), 'dynamic-routes fixture data must be an array'],
     [fixtures.bigint?.rawJson?.includes(fixtures.bigint?.expectedParsedId), 'bigint raw JSON must preserve the expected digits'],
   ]

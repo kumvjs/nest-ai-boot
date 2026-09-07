@@ -9,6 +9,8 @@
 
 刷新令牌采用轮换机制：旧 Refresh Token 被删除，再生成新的 Access Token 与 Refresh Token。退出登录会把当前 JWT UUID 加入 Redis 黑名单，并清理关联登录态。
 
+登录与刷新均返回统一 `ResOp`，Access Token 位于 `data.accessToken`；Vben 前端的 OpenAPI 客户端在统一拦截器中解包 `data`。`/user/info` 使用专用响应 DTO 将数据库 `id` 映射为字符串 `userId`，不会直接暴露用户实体和审计字段。
+
 JWT 校验还会检查：
 
 - Redis 中是否仍有 Access Token 记录；

@@ -29,3 +29,12 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Frozen fixtures cover success/error envelopes, `{ items,total }` pagination, 401/403, refresh-cookie behavior, dynamic routes, and bigint serialization.
 - [x] Contract parser/diff tests cover typed and multiline calls, hidden Nitro routes, and every required diff classification.
 - [x] No application endpoint, authentication, authorization, entity, migration, or Swagger code changed.
+
+## Completed batch: M1.1
+
+- [x] `/auth/login` contract tests preserve `ResOp<{ accessToken }>` and the HttpOnly refresh cookie.
+- [x] `/auth/refresh` contract tests preserve `ResOp<{ accessToken }>` while replacing the refresh cookie; missing cookies return HTTP 401.
+- [x] `/auth/logout` contract tests prove delegation to the established access-token invalidation path without rewriting it.
+- [x] `/user/info` maps bigint `id` to string `userId` through a dedicated Swagger DTO and does not expose entity/audit/password fields.
+- [x] The frozen refresh fixture reflects the project OpenAPI client's `ResOp` unwrapping contract rather than the upstream mock's raw-token exception.
+- [x] Focused Jest tests, test type-checking, lint, Nest build, and locked Vben fixture validation pass.
