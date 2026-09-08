@@ -1,7 +1,8 @@
 import type { MenuMeta, MenuMetaValue } from '../menu.types.js'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsEnum, IsObject, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
+import { IsEnum, IsObject, IsOptional, IsString, IsUrl, Matches, MaxLength, MinLength } from 'class-validator'
 import { MenuStatus, MenuType } from '../menu.types.js'
+import { IsVbenMenuMeta } from './is-vben-menu-meta.decorator.js'
 
 export class VbenMenuMetaDto implements MenuMeta {
   [key: string]: MenuMetaValue | undefined
@@ -75,56 +76,71 @@ export class VbenMenuMetaDto implements MenuMeta {
 
 /** Vben system-menu create/update payload. */
 export class VbenMenuWriteDto {
-  @ApiPropertyOptional({ description: '兼容 Vben 表单顶层字段；写服务归入 meta.activePath' })
+  @ApiPropertyOptional({ description: 'menu/embedded 可用；兼容 Vben 表单顶层字段并归入 meta.activePath' })
   @IsOptional()
   @IsString()
+  @MinLength(2)
   @MaxLength(100)
+  @Matches(/^\/(?!\/)[^\s?#\\]+$/, { message: 'activePath 必须是以单个 / 开头且不含空白、查询串、片段或反斜杠的路由路径' })
   activePath?: string
 
-  @ApiPropertyOptional({ description: '菜单/按钮权限码' })
+  @ApiPropertyOptional({ description: '菜单/按钮权限码；button 必填，使用冒号分段' })
   @IsOptional()
   @IsString()
   @MaxLength(255)
+  @Matches(/^[a-z][\w-]*(?::[a-z][\w-]*)+$/i, { message: 'authCode 必须是以冒号分段的权限码' })
   authCode?: string
 
-  @ApiPropertyOptional({ description: '前端组件路径' })
+  @ApiPropertyOptional({ description: '前端组件标识或路径；menu 必填' })
   @IsOptional()
   @IsString()
+  @MinLength(1)
   @MaxLength(255)
+  @Matches(/^(?!\/\/)(?!.*(?:^|\/)\.\.(?:\/|$))[\w@./-]+$/, { message: 'component 必须是安全的前端组件标识或路径' })
   component?: string
 
   @ApiPropertyOptional({ description: '兼容 Vben 表单字段；meta.link/iframeSrc 是规范存储位置' })
   @IsOptional()
   @IsString()
+  @MinLength(1)
   @MaxLength(2_048)
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true }, { message: 'linkSrc 必须是有效的 HTTP(S) URL' })
   linkSrc?: string
 
-  @ApiPropertyOptional({ additionalProperties: true, type: VbenMenuMetaDto })
+  @ApiPropertyOptional({ additionalProperties: true, description: '所有类型均要求非空 title；允许 JSON 安全的扩展字段', type: VbenMenuMetaDto })
   @IsOptional()
   @IsObject()
+  @IsVbenMenuMeta()
   meta?: VbenMenuMetaDto
 
   @ApiProperty({ maxLength: 30, minLength: 2 })
   @IsString()
   @MinLength(2)
   @MaxLength(30)
+  @Matches(/^\S+$/, { message: 'name 不得包含空白字符' })
   name: string
 
-  @ApiPropertyOptional({ description: '父菜单 ID；根节点可省略或传 0' })
+  @ApiPropertyOptional({ description: '父菜单 ID；根节点可省略或传 0，button 必须指定父级' })
   @IsOptional()
   @IsString()
+  @MaxLength(19)
+  @Matches(/^(?:0|[1-9]\d*)$/, { message: 'pid 必须是非负整数 bigint 字符串' })
   pid?: string
 
-  @ApiPropertyOptional({ description: '路由路径' })
+  @ApiPropertyOptional({ description: '路由路径；catalog/menu/embedded 必填' })
   @IsOptional()
   @IsString()
+  @MinLength(2)
   @MaxLength(100)
+  @Matches(/^\/(?!\/)[^\s?#\\]+$/, { message: 'path 必须是以单个 / 开头且不含空白、查询串、片段或反斜杠的路由路径' })
   path?: string
 
-  @ApiPropertyOptional({ description: '重定向路径' })
+  @ApiPropertyOptional({ description: 'catalog/menu 可用的重定向路径' })
   @IsOptional()
   @IsString()
+  @MinLength(2)
   @MaxLength(100)
+  @Matches(/^\/(?!\/)[^\s?#\\]+$/, { message: 'redirect 必须是以单个 / 开头且不含空白、查询串、片段或反斜杠的路由路径' })
   redirect?: string
 
   @ApiProperty({ enum: MenuStatus })

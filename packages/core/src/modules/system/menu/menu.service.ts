@@ -1,10 +1,18 @@
+import type { EntityManager } from 'typeorm'
+import type { CreateMenuDto } from './dto/create-menu.dto.js'
+import type { UpdateMenuDto } from './dto/update-menu.dto.js'
 import type { VbenMenuResponseDto, VbenRouteRecordDto } from './dto/vben-menu.dto.js'
-import { Injectable } from '@nestjs/common'
+import { ConflictException, HttpException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Not, Repository } from 'typeorm'
 import { Roles } from '#/modules/auth/auth.constant.js'
+import SysUserRoleEntity from '#/modules/user/entities/user-role.entity.js'
 import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
+import { CacheService } from '#/shared/cache/cache.service.js'
+import { authKeys } from '#/shared/cache/keys/auth.keys.js'
+import SysRoleMenuEntity from '../role/entities/role-menu.entity.js'
 import { SysMenuEntity } from './entities/menu.entity.js'
+import { assertMenuId, buildMenuWriteState, isParentCapable } from './menu-write.rules.js'
 import { MenuStatus, MenuType } from './menu.types.js'
 
 interface SortableTreeItem {
@@ -19,6 +27,7 @@ export class MenuService {
     @InjectRepository(SysMenuEntity)
     private menuRepository: Repository<SysMenuEntity>,
     private readonly userRoleService: UserRoleService,
+    private readonly cacheService: CacheService,
   ) { }
 
   /**
@@ -89,6 +98,73 @@ export class MenuService {
     )
   }
 
+  async createMenu(dto: CreateMenuDto): Promise<boolean> {
+    const affectedUserIds = await this.runSerializableWrite(async (manager) => {
+      const repository = manager.getRepository(SysMenuEntity)
+      const state = buildMenuWriteState(dto)
+
+      await this.validateWriteState(repository, state)
+      await repository.save(repository.create(state))
+      return this.getAffectedUserIds(manager)
+    })
+    await this.invalidatePermissionsCaches(affectedUserIds)
+    return true
+  }
+
+  async updateMenu(id: string, dto: UpdateMenuDto): Promise<boolean> {
+    assertMenuId(id)
+
+    const affectedUserIds = await this.runSerializableWrite(async (manager) => {
+      const repository = manager.getRepository(SysMenuEntity)
+      const current = await repository.findOne({
+        lock: { mode: 'pessimistic_write' },
+        where: { id },
+      })
+      if (!current)
+        throw new NotFoundException('菜单不存在')
+
+      const state = buildMenuWriteState(dto, current)
+      await this.validateWriteState(repository, state, id)
+
+      if (!isParentCapable(state.type) && await repository.existsBy({ pid: id }))
+        throw new ConflictException('存在子菜单的节点不能修改为叶子类型')
+
+      Object.assign(current, state)
+      await repository.save(current)
+      return this.getAffectedUserIds(manager, id)
+    })
+    await this.invalidatePermissionsCaches(affectedUserIds)
+    return true
+  }
+
+  async deleteMenu(id: string): Promise<boolean> {
+    assertMenuId(id)
+
+    const affectedUserIds = await this.runSerializableWrite(async (manager) => {
+      const repository = manager.getRepository(SysMenuEntity)
+      const current = await repository.findOne({
+        lock: { mode: 'pessimistic_write' },
+        select: { id: true },
+        where: { id },
+      })
+      if (!current)
+        throw new NotFoundException('菜单不存在')
+      if (await repository.existsBy({ pid: id }))
+        throw new ConflictException('菜单仍有子节点，不能删除')
+
+      const roleMenuRepository = manager.getRepository(SysRoleMenuEntity)
+      if (await roleMenuRepository.existsBy({ menuId: id }))
+        throw new ConflictException('菜单仍被角色引用，不能删除')
+
+      const result = await repository.softDelete({ id })
+      if (result.affected !== 1)
+        throw new ConflictException('菜单删除失败，请刷新后重试')
+      return this.getAffectedUserIds(manager, id)
+    })
+    await this.invalidatePermissionsCaches(affectedUserIds)
+    return true
+  }
+
   async getMenusByRoleIds(roleIds: string[]): Promise<string[]> {
     if (!roleIds.length)
       return []
@@ -131,6 +207,144 @@ export class MenuService {
         .map(row => typeof row.authCode === 'string' ? row.authCode.trim() : '')
         .filter(Boolean),
     )].sort()
+  }
+
+  private async validateWriteState(
+    repository: Repository<SysMenuEntity>,
+    state: ReturnType<typeof buildMenuWriteState>,
+    editingId?: string,
+  ): Promise<void> {
+    await this.validateParentChain(repository, state.pid, editingId)
+
+    const uniqueChecks: Array<Promise<boolean>> = [
+      repository.existsBy(editingId ? { id: Not(editingId), name: state.name } : { name: state.name }),
+    ]
+    const uniqueFields = ['name']
+    if (state.path) {
+      uniqueChecks.push(repository.existsBy(
+        editingId ? { id: Not(editingId), path: state.path } : { path: state.path },
+      ))
+      uniqueFields.push('path')
+    }
+    if (state.authCode) {
+      uniqueChecks.push(repository.existsBy(
+        editingId ? { authCode: state.authCode, id: Not(editingId) } : { authCode: state.authCode },
+      ))
+      uniqueFields.push('authCode')
+    }
+
+    const duplicateResults = await Promise.all(uniqueChecks)
+    const duplicateIndex = duplicateResults.findIndex(Boolean)
+    if (duplicateIndex >= 0)
+      throw new ConflictException(`${uniqueFields[duplicateIndex]} 已存在`)
+
+    if (typeof state.meta.activePath === 'string') {
+      const activePathExists = await repository.existsBy(
+        editingId
+          ? { id: Not(editingId), path: state.meta.activePath }
+          : { path: state.meta.activePath },
+      )
+      if (!activePathExists)
+        throw new UnprocessableEntityException('activePath 必须指向另一个已存在的菜单路径')
+    }
+  }
+
+  private async getAffectedUserIds(
+    manager: EntityManager,
+    menuId?: string,
+  ): Promise<string[]> {
+    const parameters: Record<string, boolean | string> = {
+      roleStatus: true,
+      superCode: Roles.SUPER,
+    }
+    let affectedRoleCondition = 'role.code = :superCode'
+    if (menuId) {
+      affectedRoleCondition = '(role.code = :superCode OR roleMenu.menuId = :menuId)'
+      parameters.menuId = menuId
+    }
+
+    const rows = await manager
+      .getRepository(SysUserRoleEntity)
+      .createQueryBuilder('userRole')
+      .select('userRole.userId', 'userId')
+      .distinct(true)
+      .innerJoin('userRole.role', 'role')
+      .leftJoin('role.roleMenus', 'roleMenu')
+      .where('role.status = :roleStatus', parameters)
+      .andWhere(affectedRoleCondition, parameters)
+      .getRawMany<{ userId: string }>()
+
+    return [...new Set(rows.map(row => String(row.userId)))].sort()
+  }
+
+  private async invalidatePermissionsCaches(userIds: string[]): Promise<void> {
+    const batchSize = 100
+    for (let offset = 0; offset < userIds.length; offset += batchSize) {
+      await Promise.all(
+        userIds
+          .slice(offset, offset + batchSize)
+          .map(userId => this.cacheService.delCache(authKeys.userPermissions(userId))),
+      )
+    }
+  }
+
+  private async validateParentChain(
+    repository: Repository<SysMenuEntity>,
+    parentId: string | null,
+    editingId?: string,
+  ): Promise<void> {
+    if (!parentId)
+      return
+
+    const visitedIds = new Set<string>(editingId ? [editingId] : [])
+    let currentId: string | null = parentId
+
+    while (currentId) {
+      if (visitedIds.has(currentId))
+        throw new ConflictException('父子关系不能形成循环')
+      visitedIds.add(currentId)
+
+      const parent: Pick<SysMenuEntity, 'id' | 'pid' | 'type'> | null
+        = await repository.findOne({
+          lock: { mode: 'pessimistic_read' },
+          select: { id: true, pid: true, type: true },
+          where: { id: currentId },
+        })
+      if (!parent)
+        throw new UnprocessableEntityException('父菜单不存在')
+      if (!isParentCapable(parent.type))
+        throw new UnprocessableEntityException('父菜单必须是 catalog 或 menu 类型')
+
+      currentId = parent.pid ? String(parent.pid) : null
+    }
+  }
+
+  private async runSerializableWrite<T>(
+    operation: (manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await this.menuRepository.manager.transaction('SERIALIZABLE', operation)
+    }
+    catch (error) {
+      if (error instanceof HttpException)
+        throw error
+
+      const driverError = error as { code?: string, constraint?: string, driverError?: { code?: string, constraint?: string } }
+      const code = driverError.code ?? driverError.driverError?.code
+      const constraint = driverError.constraint ?? driverError.driverError?.constraint ?? ''
+      if (code === '23505') {
+        const field = constraint.includes('auth_code')
+          ? 'authCode'
+          : constraint.includes('path') ? 'path' : 'name'
+        throw new ConflictException(`${field} 已存在`)
+      }
+      if (code === '23503')
+        throw new ConflictException('菜单关系已发生变化，请刷新后重试')
+      if (code === '40001' || code === '40P01')
+        throw new ConflictException('菜单已被并发修改，请刷新后重试')
+
+      throw error
+    }
   }
 
   private async getEnabledMenus(): Promise<SysMenuEntity[]> {

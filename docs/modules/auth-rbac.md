@@ -58,6 +58,10 @@ sys_user ──< sys_user_role >── sys_role
 
 图标、排序、缓存、显隐、徽标、外链与 iframe 等前端路由展示配置存入 PostgreSQL JSONB `meta`。这样新增 Vben 元数据不会反复改表；只有需要唯一约束、索引、关系或后端业务查询的字段才提升为普通列。`name`、非空 `path` 和非空 `auth_code` 由唯一索引兜住并发写入，父菜单删除使用 `RESTRICT`。
 
+菜单新增、修改、删除均在可串行化事务中执行。父链会逐级校验并锁定，只允许 catalog/menu 作为父级；自引用、后代回挂、损坏的祖先循环以及把已有子节点的节点改成叶子类型都会被拒绝。类型规则要求所有菜单有 `meta.title`，menu 有本地 path 和安全组件，embedded/link 有安全 HTTP(S) 目标，button 有父级和分段权限码。删除采用软删除，并在仍有活动子节点或角色菜单引用时拒绝操作。
+
+提交菜单写事务后，服务定向删除受该菜单启用角色映射影响的用户和启用 super 角色用户的 `auth:user:permissions:*` 缓存。创建时尚无普通角色映射，因此只查询 super 用户；整个流程不扫描 Redis。角色授权映射的后续写服务仍需复用同一提交后失效原则。
+
 本次明确不迁移旧菜单数据，也不保留旧数字类型、逗号权限码或外链字段兼容层。使用方需要通过项目的数据库初始化流程重新创建 `sys_menu` 及其角色菜单关联数据；该操作会丢弃旧菜单配置，执行实际删表/重建前必须由部署人员确认并备份。本代码变更不会主动操作任何数据库。
 
 ```ts
@@ -79,7 +83,8 @@ review() {}
 - `/menu/all` 从启用角色映射生成动态路由树，补齐授权节点的有效祖先；超级角色获得全部有效路由。
 - `/system/menu/list` 使用 `system:menu:list` 保护，返回包括按钮和停用项在内的完整管理树。
 - `/system/menu/name-exists` 与 `/system/menu/path-exists` 复用 `system:menu:list`，供菜单管理表单执行唯一性预检查。
+- `/system/menu` 的 POST、PUT、DELETE 已分别使用 `system:menu:create`、`system:menu:update`、`system:menu:delete`，成功响应为统一 envelope 中的 boolean。
 - 菜单实体已采用 Vben 五类型、JSONB 元数据、numeric 状态与 bigint `pid` 自关联；权限查询服务和按用户缓存失效入口已经存在。
-- 角色和系统菜单 Controller 尚无写入 CRUD 路由。
-- 菜单 Swagger DTO 已接入管理树与两个存在性检查路由；用户、角色、菜单完整管理流程尚未实现。
-- 权限写接口尚未实现；后续实现必须在数据库事务提交后失效受影响用户的权限缓存。
+- 角色 Controller 尚无写入 CRUD 路由；菜单的角色授权变更仍由后续角色管理批次负责。
+- 菜单 Swagger DTO 已接入管理树、存在性检查和 CRUD；用户与角色完整管理流程尚未实现。
+- 菜单 CRUD 已在提交后定向失效受影响用户权限缓存；角色菜单授权映射写接口尚未实现，后续实现必须复用同一原则。

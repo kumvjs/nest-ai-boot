@@ -24,6 +24,7 @@ describe('vben effective permission codes', () => {
   const service = new MenuService(
     menuRepository as unknown as Repository<SysMenuEntity>,
     userRoleService as unknown as UserRoleService,
+    {} as any,
   )
 
   beforeEach(() => {

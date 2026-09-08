@@ -28,6 +28,7 @@ describe('vben system menu list', () => {
   const service = new MenuService(
     menuRepository as unknown as Repository<SysMenuEntity>,
     userRoleService,
+    {} as any,
   )
   const controller = new SystemMenuController(service)
 
@@ -219,5 +220,36 @@ describe('vben system menu list', () => {
     expect(Reflect.getMetadata(PERMISSION_KEY, SystemMenuController.prototype[method])).toBe(
       MENU_PERMISSIONS.LIST,
     )
+  })
+
+  it.each([
+    ['create', '/', MENU_PERMISSIONS.CREATE],
+    ['update', ':id', MENU_PERMISSIONS.UPDATE],
+    ['remove', ':id', MENU_PERMISSIONS.DELETE],
+  ] as const)('protects the %s write route with its dedicated permission', (method, path, permission) => {
+    expect(Reflect.getMetadata(PATH_METADATA, SystemMenuController.prototype[method])).toBe(path)
+    expect(Reflect.getMetadata(PERMISSION_KEY, SystemMenuController.prototype[method])).toBe(permission)
+  })
+
+  it('delegates write DTOs and preserves ResOp<boolean>', async () => {
+    const create = jest.spyOn(service, 'createMenu').mockResolvedValueOnce(true)
+    const update = jest.spyOn(service, 'updateMenu').mockResolvedValueOnce(true)
+    const remove = jest.spyOn(service, 'deleteMenu').mockResolvedValueOnce(true)
+    const dto = {
+      component: '/system/menu/list',
+      meta: { title: 'system.menu.title' },
+      name: 'SystemMenu',
+      path: '/system/menu',
+      status: MenuStatus.ENABLED,
+      type: MenuType.MENU,
+    }
+
+    await expect(controller.create(dto)).resolves.toBe(true)
+    await expect(controller.update({ id: '7' }, { status: MenuStatus.DISABLED })).resolves.toBe(true)
+    await expect(controller.remove({ id: '7' })).resolves.toBe(true)
+    expect(create).toHaveBeenCalledWith(dto)
+    expect(update).toHaveBeenCalledWith('7', { status: MenuStatus.DISABLED })
+    expect(remove).toHaveBeenCalledWith('7')
+    expect(ResOp.success(true)).toMatchObject({ code: 0, data: true, success: true })
   })
 })

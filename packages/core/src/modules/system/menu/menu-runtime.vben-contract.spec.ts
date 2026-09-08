@@ -39,6 +39,7 @@ describe('vben runtime dynamic menus', () => {
   const service = new MenuService(
     menuRepository as unknown as Repository<SysMenuEntity>,
     userRoleService as unknown as UserRoleService,
+    {} as any,
   )
   const controller = new MenuController(service)
 

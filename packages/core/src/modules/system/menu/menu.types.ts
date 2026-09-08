@@ -47,5 +47,8 @@ export enum MenuType {
 }
 
 export const MENU_PERMISSIONS = {
+  CREATE: 'system:menu:create',
+  DELETE: 'system:menu:delete',
   LIST: 'system:menu:list',
+  UPDATE: 'system:menu:update',
 } as const

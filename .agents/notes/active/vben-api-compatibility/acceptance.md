@@ -124,3 +124,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Soft-deleted rows remain excluded through TypeORM's default repository scope, and partial unique indexes allow their values to be reused without a later write conflict.
 - [x] No menu create/update/delete logic or cache invalidation hook is implemented in this batch.
 - [x] Focused and full tests, type-checking, lint, Nest build, locked Vben contract fixtures, docs, and diff checks pass.
+
+## Completed batch: M2.6
+
+- [x] `POST /system/menu`, `PUT /system/menu/:id`, and `DELETE /system/menu/:id` use dedicated create/update/delete permissions and preserve the global `ResOp<boolean>` response contract.
+- [x] Create and update enforce the locked Vben form's five type-dependent contracts: route paths, menu components, embedded/link HTTP(S) targets, button permission codes, titles, and compatible `activePath`/`linkSrc` metadata mapping.
+- [x] Names, paths, permission codes, component identifiers, metadata values, PostgreSQL bigint IDs, and concurrent unique-constraint failures are validated without trusting the frontend prechecks.
+- [x] Parent records must exist and be parent-capable; self-parenting, existing corrupt ancestor chains, descendant reparenting, and converting a node with children into a leaf type are rejected in a serializable write transaction.
+- [x] Delete is a soft delete and is rejected while active children or active role-menu references exist.
+- [x] After commit, menu writes invalidate permission caches for distinct users assigned through the affected menu's enabled roles plus users assigned the enabled super role; create invalidates super users without scanning Redis.
+- [x] Focused/full tests, test type-checking, changed-file ESLint, Nest build, locked Vben fixtures/diff, docs, and diff checks pass. Repository-wide ESLint still reports pre-existing errors outside this batch, and VitePress dependencies are not installed.

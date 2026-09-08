@@ -214,16 +214,16 @@ tokenStore.setAccessToken(result.accessToken)
 
 `GET /menu/all` 已可直接供 Vben 的 `getAllMenusApi()` 使用。普通用户只获得启用角色授权的路由，并自动补齐完整的启用父路由；超级角色获得全部有效路由。按钮只用于权限码，不会作为路由返回。禁用、父链缺失、循环或没有 `path` 的分支会被排除，树中每一级按 `meta.order` 升序、再按唯一 `name` 排序。响应仍由全局 `ResOp` 包装，OpenAPI 客户端解包后业务结果就是 `RouteRecordStringComponent[]`。
 
-菜单写接口仍未开放，不能据此提前调用菜单管理 CRUD。
+菜单写接口已开放：新增、修改、删除分别调用 `POST /system/menu`、`PUT /system/menu/:id`、`DELETE /system/menu/:id`，生成客户端解包后得到 boolean。按钮必须提供父级与 `authCode`；menu 必须提供本地 `path` 和组件；embedded/link 的目标必须是 HTTP(S) URL。后端会兼容顶层 `activePath`/`linkSrc` 并归入 `meta`，但不会信任前端的名称或路径预检查。
 
-`GET /system/menu/list` 已开放，可供 playground 菜单管理表格和父菜单选择器读取完整树；它包含按钮和停用项，并要求当前用户具有 `system:menu:list` 权限。`GET /system/menu/name-exists` 与 `GET /system/menu/path-exists` 也已开放，生成的 OpenAPI 客户端解包后直接得到 boolean；编辑时将当前菜单 bigint 字符串 ID 一并传入即可排除自身。菜单创建、修改和删除仍未开放。
+`GET /system/menu/list` 可供 playground 菜单管理表格和父菜单选择器读取完整树；它包含按钮和停用项，并要求当前用户具有 `system:menu:list` 权限。`GET /system/menu/name-exists` 与 `GET /system/menu/path-exists` 的生成客户端解包后直接得到 boolean；编辑时将当前菜单 bigint 字符串 ID 一并传入即可排除自身。创建、修改和删除使用独立权限码，父级只能选择 catalog/menu。删除存在子节点或角色引用的菜单会收到 HTTP 409，前端应保留抽屉/列表状态并展示后端消息。
 
-菜单、角色或用户授权发生变化后，后端写服务必须在事务提交后失效受影响用户的权限缓存。当前已提供按用户失效能力，具体写接口将在对应系统管理批次接入。
+菜单写事务提交后，后端会失效受该菜单启用角色映射影响的用户以及启用 super 角色用户的权限缓存。角色或用户授权的后续写服务仍必须执行对应的定向失效。
 
 ### 尚缺接口
 
-- 菜单、角色、用户的完整 CRUD；
-- 用户状态、密码修改，以及菜单/角色/用户写操作中的权限缓存失效挂钩；
+- 角色、用户的完整 CRUD；
+- 用户状态、密码修改，以及角色/用户授权写操作中的权限缓存失效挂钩；
 - 文件上传等 Vben 常用管理接口。
 
 建议先固定 Vben 所用版本及其 mock API 契约，再以契约测试逐个补齐，避免仅凭路径名称适配。

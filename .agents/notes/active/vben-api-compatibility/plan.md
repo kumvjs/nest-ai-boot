@@ -32,10 +32,10 @@ Acceptance: the project's Vben v5.7.0 frontend using the generated OpenAPI clien
 - [x] Implement `GET /menu/all` from enabled user roles and role-menu mappings, including required parent nodes and deterministic ordering.
 - [x] Implement `GET /system/menu/list` as a complete menu/button tree.
 - [x] Implement `GET /system/menu/name-exists` and `GET /system/menu/path-exists` with edit-ID exclusion.
-- [ ] Implement `POST /system/menu`, `PUT /system/menu/:id`, and `DELETE /system/menu/:id`.
-- [ ] Enforce name/path/authCode rules, safe component/link values, valid type-dependent fields, and no parent cycles.
-- [ ] Reject deletion with children or role references unless an explicit reviewed replacement workflow exists.
-- [ ] Invalidate affected users' menu/permission caches after committed menu or mapping changes.
+- [x] Implement `POST /system/menu`, `PUT /system/menu/:id`, and `DELETE /system/menu/:id`.
+- [x] Enforce name/path/authCode rules, safe component/link values, valid type-dependent fields, and no parent cycles.
+- [x] Reject deletion with children or role references unless an explicit reviewed replacement workflow exists.
+- [x] Invalidate affected users' menu/permission caches after committed menu changes; M4 owns mapping changes.
 
 Acceptance: menus are persistent, authorization-derived, safely editable, and returned in Vben route format; action codes and route visibility reflect the same effective permissions.
 

@@ -87,8 +87,8 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 - `/auth/codes` now returns cache-backed effective menu/button permission codes. Enabled ordinary roles contribute enabled assigned menu/button codes; enabled `super` receives all enabled codes. Role identities remain in `/user/info.roles`.
 - `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated DTO, and M1.3 added persistent avatar, home-path, and description fields. The adapter now returns only `userId`, `username`, `realName`, `avatar`, `homePath`, `desc`, and `roles`; it deliberately does not echo an Access Token.
 - `nestjs-paginate` returns a shape like `{ data, meta, links }`; Vben system tables expect unwrapped `{ items, total }` and use `page/pageSize`.
-- M2.1–M2.2 define a fresh `sys_menu` shape with the complete five-type Vben model, Vben-native numeric status, stable query columns, JSONB route metadata, and a bigint `pid` self-reference. Legacy menu data will be recreated rather than migrated. Menu endpoints are still missing.
-- Existing role/menu services and controllers are partial; all writes need transactional relationship replacement and cache invalidation.
+- M2 defines a fresh `sys_menu` shape and now exposes dynamic routes plus complete management list/existence/CRUD endpoints. Legacy menu data will be recreated rather than migrated; live PostgreSQL reinitialization remains a deployment action.
+- Role and user management services/controllers remain partial; their relationship writes still need transactions and targeted cache invalidation.
 
 ## Real persistence and business rules
 
@@ -149,7 +149,7 @@ The fresh `sys_menu` stores only `pid`, `name`, `path`, `auth_code`, `type`, `co
 
 M2.3 publishes authenticated `GET /menu/all` at the root runtime path rather than under `/system`. Ordinary users resolve direct grants through enabled roles; enabled `super` receives all enabled menus without role-menu rows. The resolver computes the complete ancestor closure from the enabled menu set, so a directly granted route or button can make its required route parents visible. A branch is emitted only when it reaches a valid root, and buttons, missing-path nodes, disabled/missing ancestors, and cycles cannot leak into the route tree. Route objects contain only Vben runtime fields and are recursively sorted by numeric `meta.order` then globally unique `name`.
 
-`sys_role_menu` now uses bigint foreign keys, indexed columns, a unique role/menu pair, cascading role deletion, and restrictive menu deletion. This matches the fresh-table decision; no compatibility migration is provided. Existence checks, CRUD validation, transactional writes, and cache invalidation remain later M2 batches.
+`sys_role_menu` now uses bigint foreign keys, indexed columns, a unique role/menu pair, cascading role deletion, and restrictive menu deletion. This matches the fresh-table decision; no compatibility migration is provided. Later M2 batches completed existence checks, CRUD validation, transactional writes, and menu-write cache invalidation.
 
 ## Implemented system menu tree
 
@@ -162,6 +162,14 @@ Fresh-table constraints should prevent missing parents, and the later write serv
 M2.5 publishes the two Vben form validators at `GET /system/menu/name-exists` and `GET /system/menu/path-exists`. Both use the existing menu-list permission and the canonical `ResOp<boolean>` response. Required lookup values and optional positive bigint-string edit IDs are validated before the service queries PostgreSQL; an edit ID adds `id != :editingId`, so the current row does not reject its unchanged value. Values intentionally retain exact, case-sensitive semantics. TypeORM's normal repository scope excludes soft-deleted rows, and the three menu uniqueness constraints are partial indexes over `deleted_at IS NULL`, so a false precheck cannot become a uniqueness failure solely because a deleted row retains that value.
 
 `MenuModule` remains reachable through `AuthModule`, which imports its exported `MenuService` for permission resolution and registers its controllers. The extra direct `AppModule` import introduced during M2.3 was therefore removed; controller metadata continues to define root `/menu/all` and `/system/menu/*` paths.
+
+## Implemented menu write boundary
+
+The locked v5.7.0 form requires a title for every type, a route path for catalog/menu/embedded, a component for menu, an HTTP(S) target for embedded/link, and an auth code for button. It moves `linkSrc` into `meta.iframeSrc` or `meta.link` before submission; the backend also accepts the compatibility field and performs the same mapping. Link paths remain optional because the locked create form does not expose that field, while an existing path is preserved on update.
+
+Menu writes use serializable transactions. Parent traversal locks and validates the complete ancestor chain, restricts parents to catalog/menu nodes, and rejects self/descendant cycles. Leaf conversion and deletion check active children; deletion additionally rejects active `sys_role_menu` references and uses soft deletion so the M2.5 partial unique-index semantics remain consistent. PostgreSQL uniqueness and serialization errors are translated to stable HTTP conflicts because frontend existence checks cannot prevent concurrent races.
+
+After a successful commit, the write service invalidates only permission caches for users reached through the edited/deleted menu's enabled role mappings and users assigned the enabled `super` role. Creation has no ordinary role mapping yet, so it invalidates super users only. The query runs inside the transaction to capture the committed write's affected-user set, while Redis deletion runs after the transaction resolves; it uses the shared cache/key primitives directly and introduces neither a broad Redis scan nor an `AuthService`/`MenuService` circular dependency.
 
 ## Browser security deployment model
 

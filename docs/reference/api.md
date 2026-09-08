@@ -14,10 +14,13 @@
 | `GET` | `/system/menu/list` | JWT + `system:menu:list` | 返回包含按钮和停用项的完整菜单管理树 |
 | `GET` | `/system/menu/name-exists` | JWT + `system:menu:list` | 检查菜单名称是否重复，可排除正在编辑的菜单 ID |
 | `GET` | `/system/menu/path-exists` | JWT + `system:menu:list` | 检查菜单路径是否重复，可排除正在编辑的菜单 ID |
+| `POST` | `/system/menu` | JWT + `system:menu:create` | 新增并校验 Vben 五类型菜单，返回 boolean |
+| `PUT` | `/system/menu/:id` | JWT + `system:menu:update` | 修改菜单并校验父子关系，返回 boolean |
+| `DELETE` | `/system/menu/:id` | JWT + `system:menu:delete` | 软删除无子节点且未被角色引用的菜单，返回 boolean |
 | `GET` | `/user/info` | JWT | 返回专用 DTO：`userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 与角色数组 |
 | `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
 
-`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。菜单模块已发布运行时 `/menu/all`、只读管理树和名称/路径存在性检查；菜单 CRUD 尚未发布。
+`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。菜单模块已发布运行时 `/menu/all` 以及完整的菜单管理读写路径。
 
 ## 动态菜单
 
@@ -33,6 +36,12 @@ Authorization: Bearer eyJ...
 `GET /api/system/menu/list` 需要 `system:menu:list` 权限，`super` 角色由全局 RBAC Guard 放行。接口返回所有未软删除记录，包括按钮和 `status=0` 的停用菜单；不会返回审计列或实体关系。Bigint `id`/`pid` 保持字符串，树按 `meta.order`、`name` 递归排序。为兼容 v5.7.0 编辑表单，`meta.activePath` 同时作为顶层 `activePath` 返回，但数据库不增加重复列。
 
 同一权限还保护 `GET /api/system/menu/name-exists?name=...&id=...` 和 `GET /api/system/menu/path-exists?path=...&id=...`。`id` 可省略；编辑时传入正整数 bigint 字符串会排除当前记录。响应的 `data` 为 boolean，比较规则与当前大小写敏感的有效记录唯一索引一致。软删除记录不参与检查，相应部分唯一索引也允许后续复用其值。
+
+`POST /api/system/menu`、`PUT /api/system/menu/:id` 和 `DELETE /api/system/menu/:id` 分别要求 create/update/delete 权限，成功时统一返回 `ResOp<boolean>`。所有类型都要求 `meta.title`；catalog/menu/embedded 要求本地 `path`，menu 还要求安全的组件标识，embedded/link 要求不含用户凭据的 HTTP(S) 地址，button 要求父级和冒号分段的 `authCode`。顶层 `activePath`、`linkSrc` 会归入 JSONB `meta`。父级只能是 catalog/menu；写服务在可串行化事务中拒绝无效父级、自引用、后代回挂和已有子节点的叶子类型转换，并把数据库唯一键或并发竞争转换成 HTTP 409。
+
+删除使用软删除。只要仍有未软删除的子菜单或 `sys_role_menu` 引用，就会返回 HTTP 409；不会级联删除或自动改写角色权限。
+
+写事务提交后，系统会定向失效受该菜单角色映射影响的用户以及启用 super 角色用户的权限码缓存；创建尚无普通角色映射，只需失效 super 用户。Redis 失效不使用全量键扫描。
 
 ## 登录
 
