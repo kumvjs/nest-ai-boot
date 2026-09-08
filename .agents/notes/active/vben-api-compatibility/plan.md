@@ -41,12 +41,12 @@ Acceptance: menus are persistent, authorization-derived, safely editable, and re
 
 ## M3 — Department persistence
 
-- [ ] Design and migrate `sys_dept` with parent ID, name, status, remark, order, and audit fields.
-- [ ] Add an indexed nullable department foreign key to `sys_user` with an explicit deletion policy.
-- [ ] Implement `GET /system/dept/list` as a deterministic tree.
-- [ ] Implement `POST /system/dept`, `PUT /system/dept/:id`, and `DELETE /system/dept/:id`.
-- [ ] Reject cyclic parents and deletion when child departments or users exist.
-- [ ] Decide and test how disabling a department affects descendants and users; recommendation: do not silently disable user accounts.
+- [x] Define a fresh `sys_dept` entity with parent ID, name, status, remark, order, and audit fields; database creation is deployment-owned and no migration is generated.
+- [x] Add an indexed nullable department foreign key mapping to `sys_user` with a restrictive deletion policy; database DDL remains deployment-owned.
+- [x] Implement `GET /system/dept/list` as a deterministic tree.
+- [x] Implement `POST /system/dept`, `PUT /system/dept/:id`, and `DELETE /system/dept/:id`.
+- [x] Reject cyclic parents and deletion when child departments or users exist.
+- [x] Decide and test how disabling a department affects descendants and users: only the selected department changes.
 
 Acceptance: department writes persist, tree invariants hold under concurrent updates, and destructive operations cannot orphan users or descendants.
 

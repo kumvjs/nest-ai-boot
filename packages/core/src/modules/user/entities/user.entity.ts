@@ -1,9 +1,10 @@
 import type { Relation } from 'typeorm'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import { Exclude } from 'class-transformer'
-import { Column, Entity, Index, OneToMany } from 'typeorm'
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
 import { CommonEntity } from '#/common/entity/common.entity.js'
 import { RefreshTokenEntity } from '#/modules/auth/entities/refresh-token.entity.js'
+import { SysDeptEntity } from '#/modules/system/dept/entities/dept.entity.js'
 import { md5 } from '#/utils/index.js'
 import SysUserRoleEntity from './user-role.entity.js'
 
@@ -41,6 +42,19 @@ export class SysUserEntity extends CommonEntity {
   @Column({ length: 500, nullable: true })
   @ApiProperty({ description: '用户描述', nullable: true, required: false })
   description?: string | null
+
+  @Column({ name: 'dept_id', type: 'bigint', nullable: true })
+  @Index('idx_sys_user_dept_id')
+  @ApiProperty({ description: '所属部门 ID', nullable: true, required: false, type: String })
+  deptId?: string | null
+
+  @ApiHideProperty()
+  @ManyToOne(() => SysDeptEntity, {
+    nullable: true,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'dept_id' })
+  dept?: Relation<SysDeptEntity> | null
 
   @Column({
     type: 'boolean',

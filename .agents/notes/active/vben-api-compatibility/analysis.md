@@ -49,16 +49,16 @@ Paths omit this project's default `/api` global prefix.
 
 | Domain | Method and path | Request/query summary | Upstream mock | Current project |
 | --- | --- | --- | --- | --- |
-| Department | GET `/system/dept/list` | tree of `id,pid,name,status,remark,createTime,children` | Yes | Missing |
-| Department | POST `/system/dept` | `pid,name,status,remark` | Fake success only (`.post.ts`) | Missing |
-| Department | PUT `/system/dept/:id` | `pid,name,status,remark` | Fake success only | Missing |
-| Department | DELETE `/system/dept/:id` | id | Fake success only | Missing |
+| Department | GET `/system/dept/list` | tree of `id,pid,name,status,remark,createTime,children` | Yes | Implemented in M3 |
+| Department | POST `/system/dept` | `pid,name,status,remark` | Fake success only (`.post.ts`) | Implemented in M3 |
+| Department | PUT `/system/dept/:id` | `pid,name,status,remark` | Fake success only | Implemented in M3 |
+| Department | DELETE `/system/dept/:id` | id | Fake success only | Implemented in M3 |
 | Menu | GET `/system/menu/list` | complete menu/button tree | Yes | Implemented in M2.4 |
 | Menu | GET `/system/menu/name-exists` | query `name`, optional editing `id` | Yes | Implemented in M2.5 |
 | Menu | GET `/system/menu/path-exists` | query `path`, optional editing `id` | Yes | Implemented in M2.5 |
-| Menu | POST `/system/menu` | Vben menu form | **Missing** | Missing |
-| Menu | PUT `/system/menu/:id` | Vben menu form | **Missing** | Missing |
-| Menu | DELETE `/system/menu/:id` | id | **Missing** | Missing |
+| Menu | POST `/system/menu` | Vben menu form | **Missing** | Implemented in M2.6 |
+| Menu | PUT `/system/menu/:id` | Vben menu form | **Missing** | Implemented in M2.6 |
+| Menu | DELETE `/system/menu/:id` | id | **Missing** | Implemented in M2.6 |
 | Role | GET `/system/role/list` | `page,pageSize,name,id,status,remark,startTime,endTime` | Yes | Missing |
 | Role | POST `/system/role` | `name,status,remark,permissions` | **Missing** | Missing |
 | Role | PUT `/system/role/:id` | partial update, including status | **Missing** | Missing |
@@ -170,6 +170,14 @@ The locked v5.7.0 form requires a title for every type, a route path for catalog
 Menu writes use serializable transactions. Parent traversal locks and validates the complete ancestor chain, restricts parents to catalog/menu nodes, and rejects self/descendant cycles. Leaf conversion and deletion check active children; deletion additionally rejects active `sys_role_menu` references and uses soft deletion so the M2.5 partial unique-index semantics remain consistent. PostgreSQL uniqueness and serialization errors are translated to stable HTTP conflicts because frontend existence checks cannot prevent concurrent races.
 
 After a successful commit, the write service invalidates only permission caches for users reached through the edited/deleted menu's enabled role mappings and users assigned the enabled `super` role. Creation has no ordinary role mapping yet, so it invalidates super users only. The query runs inside the transaction to capture the committed write's affected-user set, while Redis deletion runs after the transaction resolves; it uses the shared cache/key primitives directly and introduces neither a broad Redis scan nor an `AuthService`/`MenuService` circular dependency.
+
+## Implemented department boundary for M3
+
+The locked v5.7.0 department form submits `name`, optional `pid`, numeric `status`, and optional `remark`; the list additionally consumes `id`, `createTime`, and recursive `children`. The backend adds `order`/`order_no` because deterministic business ordering is useful even though the stock form does not expose it. `order` is optional at the API boundary and defaults to zero. Sibling names, including root names, are unique among non-deleted records.
+
+The user explicitly owns database creation, so M3 changes only TypeORM entity mappings and application behavior: no migration or DDL execution. `sys_user.dept_id` is nullable, indexed, and restrictive. Department writes use serializable transactions and validate the full parent chain. Delete is a soft delete rejected by active child or any persisted user reference, including soft-deleted users so later restoration cannot produce a dangling logical reference. Changing a department's numeric status has no cascade semantics; descendants and users remain unchanged.
+
+The management query projects entities rather than serializing relations, preserves bigint strings, maps `createdAt` to `createTime`, and recursively sorts by `order/name/id`. Defensive normalization promotes orphans and self-links to roots and deterministically opens historical cycles, so malformed pre-existing data cannot disappear or produce cyclic JSON. DTO and service validation accept only numeric `0 | 1`, enforce PostgreSQL bigint range at the write boundary, and map unique, foreign-key, serialization, and deadlock races to stable HTTP 409 responses.
 
 ## Browser security deployment model
 

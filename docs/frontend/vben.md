@@ -220,9 +220,17 @@ tokenStore.setAccessToken(result.accessToken)
 
 菜单写事务提交后，后端会失效受该菜单启用角色映射影响的用户以及启用 super 角色用户的权限缓存。角色或用户授权的后续写服务仍必须执行对应的定向失效。
 
+### 部门管理
+
+Vben v5.7.0 的部门页可使用 `GET /system/dept/list`、`POST /system/dept`、`PUT /system/dept/:id` 和 `DELETE /system/dept/:id`。生成客户端解包后，列表得到递归部门数组，写操作得到 boolean。响应保留 bigint 字符串 ID，包含 `id`、可选 `pid`、`name`、数值 `status`、可选 `remark`、`order`、`createTime` 和可选 `children`。
+
+后端额外支持表单可选字段 `order`，默认值为 `0`，同级部门按 `order/name/id` 稳定排序。父级必须存在，不能选择自身或后代；同一父级下活动部门名称不能重复。删除仍有关联子部门或用户的部门会收到 HTTP 409。停用部门不会自动停用其子部门或用户，前端不应推断这种级联语义。
+
+部门及用户归属字段由部署方依据实体映射新建，本代码不执行数据库迁移；上线接口前必须先创建 `sys_dept` 和 `sys_user.dept_id`。
+
 ### 尚缺接口
 
-- 角色、用户的完整 CRUD；
+- 角色、用户的完整 CRUD（部门 CRUD 已完成）；
 - 用户状态、密码修改，以及角色/用户授权写操作中的权限缓存失效挂钩；
 - 文件上传等 Vben 常用管理接口。
 

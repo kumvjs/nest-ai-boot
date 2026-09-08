@@ -134,3 +134,13 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Delete is a soft delete and is rejected while active children or active role-menu references exist.
 - [x] After commit, menu writes invalidate permission caches for distinct users assigned through the affected menu's enabled roles plus users assigned the enabled super role; create invalidates super users without scanning Redis.
 - [x] Focused/full tests, test type-checking, changed-file ESLint, Nest build, locked Vben fixtures/diff, docs, and diff checks pass. Repository-wide ESLint still reports pre-existing errors outside this batch, and VitePress dependencies are not installed.
+
+## Completed batch: M3
+
+- [x] `SysDeptEntity` directly models bigint `pid`, Vben `name/status/remark`, business `order`, soft deletion, sibling-name uniqueness, and a restrictive self-reference; `SysUserEntity` gains an indexed nullable restrictive `deptId` relation.
+- [x] No migration or database DDL is generated or executed; the deployment owner creates/rebuilds the table and user column from the entity contract.
+- [x] `GET /system/dept/list` returns every active department exactly once as a deterministic `order/name/id` tree with bigint IDs serialized as strings and `createdAt` mapped to `createTime`.
+- [x] POST/PUT/DELETE use dedicated permissions, explicit Swagger DTOs, `ResOp<boolean>`, PostgreSQL bigint validation, serializable transactions, and stable conflict/error behavior.
+- [x] Parent existence, self/descendant cycles, sibling duplicate names, active child deletion, and user-reference deletion are rejected; database constraints remain the final concurrent-write safeguard.
+- [x] Disabling a department changes only that department and never silently changes child departments or users.
+- [x] Focused/full tests, test type-checking, changed-file ESLint, Nest build, locked Vben fixtures/diff, docs, and diff checks pass proportionally.

@@ -17,6 +17,10 @@
 | `POST` | `/system/menu` | JWT + `system:menu:create` | 新增并校验 Vben 五类型菜单，返回 boolean |
 | `PUT` | `/system/menu/:id` | JWT + `system:menu:update` | 修改菜单并校验父子关系，返回 boolean |
 | `DELETE` | `/system/menu/:id` | JWT + `system:menu:delete` | 软删除无子节点且未被角色引用的菜单，返回 boolean |
+| `GET` | `/system/dept/list` | JWT + `system:dept:list` | 返回包含停用项的完整部门树 |
+| `POST` | `/system/dept` | JWT + `system:dept:create` | 新增部门，返回 boolean |
+| `PUT` | `/system/dept/:id` | JWT + `system:dept:update` | 修改部门及其父级、排序和状态，返回 boolean |
+| `DELETE` | `/system/dept/:id` | JWT + `system:dept:delete` | 软删除无子部门且无用户引用的部门，返回 boolean |
 | `GET` | `/user/info` | JWT | 返回专用 DTO：`userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 与角色数组 |
 | `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
 
@@ -42,6 +46,16 @@ Authorization: Bearer eyJ...
 删除使用软删除。只要仍有未软删除的子菜单或 `sys_role_menu` 引用，就会返回 HTTP 409；不会级联删除或自动改写角色权限。
 
 写事务提交后，系统会定向失效受该菜单角色映射影响的用户以及启用 super 角色用户的权限码缓存；创建尚无普通角色映射，只需失效 super 用户。Redis 失效不使用全量键扫描。
+
+## 部门管理
+
+`GET /api/system/dept/list` 返回全部未软删除部门，包括 `status=0` 的停用项。Bigint `id`/`pid` 保持字符串，`created_at` 映射为 `createTime`；树在每一级依次按 `order`、`name`、`id` 排序。缺失父级、自指或历史循环数据会在响应投影中安全归根，保证每条记录恰好出现一次且 JSON 不成环。
+
+`POST /api/system/dept`、`PUT /api/system/dept/:id`、`DELETE /api/system/dept/:id` 分别要求 `system:dept:create`、`system:dept:update`、`system:dept:delete`，成功响应统一为 `ResOp<boolean>`。请求字段沿用 Vben 的 `name`、`pid`、`status`、`remark`，并增加可选非负整数 `order`（默认 `0`，数值越小越靠前）。状态只接受数值 `0 | 1`。
+
+写操作在可串行化事务中执行，完整父链会被校验和锁定；不存在的父级、自引用、挂到后代以及同级活动部门重名会被拒绝。删除使用软删除，只允许删除没有活动子部门、且没有任何现存或软删除用户引用的叶子部门。停用部门只修改该部门本身，不级联停用子部门或用户。
+
+本批次仅提供 TypeORM 映射和业务逻辑，不生成或执行迁移。部署方需要按 `SysDeptEntity` 创建 `sys_dept`，并为 `sys_user` 增加 nullable、indexed、`RESTRICT` 的 `dept_id` 外键。
 
 ## 登录
 

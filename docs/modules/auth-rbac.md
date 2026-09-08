@@ -43,9 +43,9 @@ JWT 校验还会检查：
 ## RBAC 数据模型
 
 ```text
-sys_user ──< sys_user_role >── sys_role
-                                  │
-                                  └──< sys_role_menu >── sys_menu.auth_code
+sys_user ───────> sys_dept（nullable，删除 RESTRICT）
+   │
+   └──< sys_user_role >── sys_role ──< sys_role_menu >── sys_menu.auth_code
 ```
 
 `sys_menu.auth_code` 是 Vben 的 `authCode` 持久化列，每行只保存一个权限码。查询会去空、去重并稳定排序；角色关联产生的重复行优先在 PostgreSQL 中去重。有效权限只来自启用角色关联的启用菜单或按钮。启用的 `super` 角色不要求建立逐项角色菜单关联，而是获得全部启用菜单/按钮权限码，和后端守卫的超级用户放行语义保持一致。守卫只根据启用角色关系生成的 `roleCodes` 判断 `super`，不会信任 `sys_user.role` 的旧冗余值。
@@ -63,6 +63,12 @@ sys_user ──< sys_user_role >── sys_role
 提交菜单写事务后，服务定向删除受该菜单启用角色映射影响的用户和启用 super 角色用户的 `auth:user:permissions:*` 缓存。创建时尚无普通角色映射，因此只查询 super 用户；整个流程不扫描 Redis。角色授权映射的后续写服务仍需复用同一提交后失效原则。
 
 本次明确不迁移旧菜单数据，也不保留旧数字类型、逗号权限码或外链字段兼容层。使用方需要通过项目的数据库初始化流程重新创建 `sys_menu` 及其角色菜单关联数据；该操作会丢弃旧菜单配置，执行实际删表/重建前必须由部署人员确认并备份。本代码变更不会主动操作任何数据库。
+
+## 部门持久化模型
+
+`sys_dept` 使用 bigint `pid` 自关联，持久化 `name`、numeric `status`、`remark` 与整数 `order_no`，并继承审计和软删除字段。根部门名称、同一父级下的部门名称分别由仅覆盖未软删除记录的部分唯一索引保护；父部门与 `sys_user.dept_id` 的外键删除策略均为 `RESTRICT`。
+
+部门写服务通过可串行化事务、父链锁和数据库约束共同保护树结构及并发唯一性。删除前检查活动子部门和全部用户引用；修改 `status` 不操作子部门、用户、角色或权限缓存。与菜单重建一样，本批次不生成迁移或执行 DDL，实际新表与用户字段由部署方创建。
 
 ```ts
 @RequirePermissions('system:user:list')
@@ -84,7 +90,8 @@ review() {}
 - `/system/menu/list` 使用 `system:menu:list` 保护，返回包括按钮和停用项在内的完整管理树。
 - `/system/menu/name-exists` 与 `/system/menu/path-exists` 复用 `system:menu:list`，供菜单管理表单执行唯一性预检查。
 - `/system/menu` 的 POST、PUT、DELETE 已分别使用 `system:menu:create`、`system:menu:update`、`system:menu:delete`，成功响应为统一 envelope 中的 boolean。
+- `/system/dept/list` 及部门 POST、PUT、DELETE 已使用各自 `system:dept:*` 权限，提供稳定部门树和受约束的持久化写入。
 - 菜单实体已采用 Vben 五类型、JSONB 元数据、numeric 状态与 bigint `pid` 自关联；权限查询服务和按用户缓存失效入口已经存在。
 - 角色 Controller 尚无写入 CRUD 路由；菜单的角色授权变更仍由后续角色管理批次负责。
-- 菜单 Swagger DTO 已接入管理树、存在性检查和 CRUD；用户与角色完整管理流程尚未实现。
+- 菜单与部门 Swagger DTO 已接入管理查询和 CRUD；用户与角色完整管理流程尚未实现。
 - 菜单 CRUD 已在提交后定向失效受影响用户权限缓存；角色菜单授权映射写接口尚未实现，后续实现必须复用同一原则。
