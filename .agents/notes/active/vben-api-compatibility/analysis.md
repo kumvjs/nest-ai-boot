@@ -63,10 +63,10 @@ Paths omit this project's default `/api` global prefix.
 | Role | POST `/system/role` | `name,status,remark,permissions` | **Missing** | Implemented in M4 |
 | Role | PUT `/system/role/:id` | partial update, including status | **Missing** | Implemented in M4 |
 | Role | DELETE `/system/role/:id` | id | **Missing** | Implemented in M4 |
-| User | GET `/system/user/list` | role-list filters plus `deptId`; `{ items,total }` | Yes | Exists; fields/pagination differ |
-| User | POST `/system/user` | demo sends `name,deptId,status,remark,permissions` | **Missing** | Missing |
-| User | PUT `/system/user/:id` | partial update, including status | **Missing** | Missing |
-| User | DELETE `/system/user/:id` | id | **Missing** | Missing |
+| User | GET `/system/user/list` | role-list filters plus `deptId`; `{ items,total }` | Yes | Implemented in M5 |
+| User | POST `/system/user` | demo sends `name,deptId,status,remark,permissions` | **Missing** | Implemented in M5 with explicit `username/password/roleIds` RBAC adapter |
+| User | PUT `/system/user/:id` | partial update, including status | **Missing** | Implemented in M5 |
+| User | DELETE `/system/user/:id` | id | **Missing** | Implemented in M5 |
 
 The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePath`, `meta.icon`, `meta.activeIcon`, `component`, `linkSrc`, `authCode`, `status`, badge fields, keep-alive/affix flags, and hide flags. Menu types are `catalog | menu | embedded | link | button`; the incompatible three-value numeric model is intentionally replaced because menu data will be reinitialized.
 
@@ -88,7 +88,7 @@ The menu form can submit `type`, `name`, `pid`, `meta.title`, `path`, `activePat
 - `/user/info` previously exposed an entity-shaped object with `id`. M1.1 introduced a dedicated DTO, and M1.3 added persistent avatar, home-path, and description fields. The adapter now returns only `userId`, `username`, `realName`, `avatar`, `homePath`, `desc`, and `roles`; it deliberately does not echo an Access Token.
 - `nestjs-paginate` returns a shape like `{ data, meta, links }`; Vben system tables expect unwrapped `{ items, total }` and use `page/pageSize`.
 - M2 defines a fresh `sys_menu` shape and now exposes dynamic routes plus complete management list/existence/CRUD endpoints. Legacy menu data will be recreated rather than migrated; live PostgreSQL reinitialization remains a deployment action.
-- Role and user management services/controllers remain partial; their relationship writes still need transactions and targeted cache invalidation.
+- Role and user management now provide transactional relationship writes and targeted cache/session invalidation.
 
 ## Real persistence and business rules
 
@@ -199,4 +199,14 @@ CORS alone does not prevent a cross-site form from causing a state change, so a 
 
 M1.6 rejects `status=false` only after the submitted password has verified. Unknown users and wrong passwords keep the generic credential error, while a correctly authenticated disabled user receives the dedicated disabled-account error before any token, login cache, or success log is created. Internal validated login data removes both `password_hash` and `psalt`. This check gates new logins; M5 status writes still need transactional revocation and cache invalidation for already-issued sessions.
 
-The current salted MD5 data cannot be directly converted to Argon2id without the user's plaintext password. M5 therefore owns a reversible mixed-algorithm schema, Argon2id-only create/reset paths, opportunistic direct rehash after successful legacy verification, password/session-version invalidation, aggregate rollout metrics, an inactive-account forced-reset deadline, and eventual MD5/`psalt` removal. Parameters must be benchmarked against the current OWASP guidance at implementation time rather than frozen in this planning batch.
+The original plan assumed in-place salted-MD5 migration, which would have required a mixed verifier because hashes cannot be converted without plaintext. The M5 deployment instruction instead rebuilds the user table, so no legacy rows, mixed verifier, rollout counters, or schema migration remain in scope. Fresh credentials are Argon2id-only, and production must still benchmark parameters at or above current OWASP guidance.
+
+## Implemented user boundary for M5
+
+The locked v5.7.0 user grid requests `page/pageSize/name/id/status/remark/startTime/endTime/deptId` and consumes Vben fields such as `id/name/status/remark/createTime/deptId`. Its type declares `permissions`, but the actual form schema does not bind that field even though the drawer contains an unused menu-tree slot. Reusing that ambiguous field for direct menu grants would conflict with the established user → role → menu model. M5 therefore adds explicit `roleIds`; it also adds required create-only `username/password`, keeping immutable login identity separate from editable Vben display `name`.
+
+The user's deployment instruction supersedes the earlier mixed-hash migration plan: `sys_user` is recreated as an Argon2id-only table, so M5 removes `psalt`, legacy MD5, and the redundant `role` column without generating migration or DDL. Passwords use PHC strings and an explicit `password_algorithm=argon2id` marker. The default `m=19456,t=2,p=1` meets the current OWASP minimum, remains environment-tunable above that floor, and was smoke-benchmarked locally; production-class hardware must still select its final cost before rollout.
+
+User writes use serializable transactions. Create validates and locks one enabled department and every enabled role before saving the Argon2id hash and role mappings. Partial PUT preserves omitted roles and credentials; submitting `roleIds` hard-replaces mappings, while submitting `password` resets the hash and increments `session_version`. Disable, password reset, and delete remove persisted Refresh Tokens and invalidate token/session state after commit. Every update deletes the targeted user-info and permission caches.
+
+An enabled user who currently holds the enabled `super` role cannot be disabled, deleted, or have that role removed unless another enabled super user exists. The predicate is evaluated inside the serializable transaction with read locks so concurrent attempts cannot remove both administrative paths. Delete hard-removes user-role mappings and soft-deletes the user, allowing the active-only username index to support intentional reuse by a new identity.

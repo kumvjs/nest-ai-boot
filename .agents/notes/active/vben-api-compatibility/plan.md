@@ -63,18 +63,18 @@ Acceptance: role CRUD and permission assignment are transactional, protected rol
 
 ## M5 — User management
 
-- [ ] Resolve the contract decision: recommended `roleIds` with existing RBAC; if exact upstream `permissions` is retained, approve direct-user-grant storage and union/override semantics first.
-- [ ] Extend user/profile persistence for department, timezone, remark, and any remaining approved fields; reuse the M1 avatar, home-path, and description columns.
-- [ ] Adapt `GET /system/user/list` from `nestjs-paginate` output to `{ items,total }` and accept Vben `page/pageSize` filters including `deptId` and time range.
-- [ ] Implement `POST /system/user`, `PUT /system/user/:id`, and `DELETE /system/user/:id` with DTOs separate from entities.
-- [ ] Implement transactional role assignment and targeted permission/session-cache invalidation.
-- [ ] Define soft delete, username reuse, status toggling, password create/reset, forced logout, and audit rules.
-- [ ] Prevent disabling/deleting the current last super administrator.
-- [ ] Add a reversible password-hash schema migration with an explicit algorithm marker; retain `legacy-md5` during rollout, make `psalt` nullable only when the dual verifier is ready, and store modern hashes in PHC format.
-- [ ] Select a maintained Argon2id implementation, benchmark production-class hardware against then-current OWASP minimums, and keep the parameters configurable/versioned; use bcrypt only as an explicitly reviewed fallback when Argon2id is unavailable.
-- [ ] Make create/reset paths Argon2id-only and opportunistically replace a verified legacy MD5 hash with a direct Argon2id hash of the submitted password before issuing tokens; never bulk-wrap MD5 hashes as if that removed the legacy weakness.
-- [ ] Increment persisted password/session version and revoke other sessions after a successful password upgrade/reset; make the update transactional and safe under concurrent logins.
-- [ ] Track only aggregate migration counts, force reset for legacy accounts inactive beyond the approved deadline, retain rollback support for mixed hashes during the rollout window, then remove the MD5 verifier and legacy salt after the measured migration threshold is met.
+- [x] Resolve the contract decision with explicit `roleIds` and the existing RBAC model; do not persist direct per-user menu grants.
+- [x] Extend user/profile persistence for department, timezone, remark, and the existing avatar, home-path, and description fields.
+- [x] Adapt `GET /system/user/list` to `{ items,total }` and accept validated Vben `page/pageSize` filters including `deptId` and time range.
+- [x] Implement `POST /system/user`, `PUT /system/user/:id`, and `DELETE /system/user/:id` with DTOs separate from entities.
+- [x] Implement transactional role assignment and targeted permission/session-cache invalidation.
+- [x] Define soft delete, active-only username reuse, numeric status toggling, password create/reset, forced logout, and audit rules.
+- [x] Prevent disabling, deleting, or removing super access from the last enabled super administrator.
+- [x] Use a fresh Argon2id-only schema with explicit algorithm marker, PHC hashes, and persisted session version; per deployment instruction, generate no migration or legacy MD5 compatibility.
+- [x] Select maintained `argon2`, enforce the current OWASP parameter floor, expose environment tuning, and locally smoke-benchmark the default; production hardware calibration remains a deployment gate.
+- [x] Make create/reset paths Argon2id-only and remove the MD5/`psalt` implementation from the fresh entity and setup flow.
+- [x] Increment the persisted session version and revoke other Access/Refresh Token state after password reset or account disable.
+- [x] Reject refresh for disabled, deleted, or session-version-mismatched users; no mixed-hash rollout counters/deadline are needed for the fresh table.
 
 Acceptance: user CRUD preserves RBAC and session invariants, returns Vben-compatible fields, and cannot remove the system's final administrative access path.
 

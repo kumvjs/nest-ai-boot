@@ -30,4 +30,5 @@ Establish the authoritative Vben API scope and implement the versioned backlog i
 
 - The target is Vben Admin 5.x and includes the official playground system-management pages, not only a minimal UI variant.
 - The existing role-based RBAC remains the preferred authorization model.
-- Exact production behavior for direct per-user permissions is a blocking design decision for the later user-management implementation, not for this planning phase.
+- M5 resolves the upstream user `permissions` ambiguity in favor of the existing RBAC model: management requests use explicit `roleIds`, and no direct per-user menu grants are persisted.
+- The deployment owner will create the redesigned user tables directly. M5 must not generate a migration or retain legacy MD5 rows in the fresh schema.

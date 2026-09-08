@@ -10,7 +10,8 @@ import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
 import { BusinessException } from '#/common/exceptions/business.exception.js'
 
 import { securityConfig } from '#/config/index.js'
-import { RoleService } from '#/modules/system/role/role.service.js'
+import { UserStatus } from '#/modules/system/sys-user/sys-user.types.js'
+import { UserService } from '#/modules/user/user.service.js'
 import { CacheService } from '#/shared/cache/cache.service.js'
 import { authKeys } from '#/shared/cache/keys/index.js'
 import { onlineKeys } from '#/shared/cache/keys/online.keys.js'
@@ -27,7 +28,7 @@ export class TokenService {
     private readonly cacheService: CacheService,
     private jwtService: JwtService,
     private readonly jwtStrategy: JwtStrategy,
-    private roleService: RoleService,
+    private readonly userService: UserService,
     @Inject(securityConfig.KEY) private securityConfig: SecurityConfig,
     @InjectRepository(RefreshTokenEntity) private refreshTokenRepo: Repository<RefreshTokenEntity>,
 
@@ -39,11 +40,11 @@ export class TokenService {
     return jwtSign
   }
 
-  async generateAccessToken(uid: string) {
+  async generateAccessToken(uid: string, sessionVersion: number) {
     const payload: AuthUser = {
       jwtUuid: generateUUID(),
       uid,
-      pv: 1,
+      pv: sessionVersion,
     }
 
     const jwtSign = await this.jwtService.signAsync(payload)
@@ -119,6 +120,14 @@ export class TokenService {
     }
 
     const userId = tokenRecord.userId
+    const user = await this.userService.getUserSessionState(userId)
+    if (
+      !user
+      || user.status !== UserStatus.ENABLED
+      || user.sessionVersion !== refreshUser.pv
+    ) {
+      throw new BusinessException(ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED)
+    }
 
     // PostgreSQL 的单条 DELETE 是并发刷新时的一次性消费点。只有删除成功的请求可以继续轮换。
     const consumed = await this.refreshTokenRepo.delete({ value: oldRefreshToken })
@@ -132,12 +141,12 @@ export class TokenService {
     const refreshTokenPayload: AuthUser = {
       jwtUuid: generateUUID(),
       uid: userId,
-      pv: 1,
+      pv: user.sessionVersion,
     }
 
     const newRefreshToken = await this.generateRefreshToken(refreshTokenPayload, dayjs())
 
-    const accessToken = await this.generateAccessToken(userId)
+    const accessToken = await this.generateAccessToken(userId, user.sessionVersion)
 
     return {
       accessToken,

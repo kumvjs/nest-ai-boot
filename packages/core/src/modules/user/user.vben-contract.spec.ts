@@ -31,11 +31,10 @@ describe('vben current-user contract', () => {
       description: 'System administrator',
       homePath: '/workspace',
       id: '9007199254740993',
-      nickname: 'Administrator',
-      password_hash: 'must-not-leak',
-      psalt: 'must-not-leak',
-      role: 'admin',
-      status: true,
+      name: 'Administrator',
+      passwordAlgorithm: 'argon2id',
+      passwordHash: 'must-not-leak',
+      status: 1,
       username: 'admin',
     })
     userRoleService.getUserRoleCodes.mockResolvedValue(['super'])
@@ -52,8 +51,8 @@ describe('vben current-user contract', () => {
       username: 'admin',
     })
     expect(data).not.toHaveProperty('id')
-    expect(data).not.toHaveProperty('password_hash')
-    expect(data).not.toHaveProperty('psalt')
+    expect(data).not.toHaveProperty('passwordHash')
+    expect(data).not.toHaveProperty('passwordAlgorithm')
     expect(ResOp.success(data)).toMatchObject({
       code: 0,
       data: {
@@ -75,9 +74,8 @@ describe('vben current-user contract', () => {
       description: null,
       homePath: null,
       id: '42',
-      nickname: 'User',
-      role: 'user',
-      status: true,
+      name: 'User',
+      status: 1,
       username: 'user',
     })
     userRoleService.getUserRoleCodes.mockResolvedValue(['user'])

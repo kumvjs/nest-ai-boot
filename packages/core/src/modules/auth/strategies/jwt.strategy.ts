@@ -7,6 +7,7 @@ import { ERROR_CODES } from '#/common/constants/error-code.constant.js'
 
 import { BusinessException } from '#/common/exceptions/business.exception.js'
 import { securityConfig } from '#/config/index.js'
+import { UserStatus } from '#/modules/system/sys-user/sys-user.types.js'
 import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
 import { UserService } from '#/modules/user/user.service.js'
 import { TraceContext } from '#/shared/logger/logger.service.js'
@@ -44,7 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, AuthStrategy.JWT) {
       throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
     }
     const user = await this.userService.getCachedUserById(uid)
-    if (!user) {
+    if (!user || user.status !== UserStatus.ENABLED) {
       throw new BusinessException(ERROR_CODES.AUTH_TOKEN_INVALID)
     }
     const traceStore = TraceContext.storage.getStore()

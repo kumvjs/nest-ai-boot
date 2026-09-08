@@ -50,6 +50,11 @@ export const envValidationSchema = Joi.object({
 
   JWT_SECRET: Joi.string().required(),
 
+  PASSWORD_ARGON2_HASH_LENGTH: Joi.number().integer().min(32).default(32),
+  PASSWORD_ARGON2_MEMORY_COST: Joi.number().integer().min(19_456).default(19_456),
+  PASSWORD_ARGON2_PARALLELISM: Joi.number().integer().min(1).default(1),
+  PASSWORD_ARGON2_TIME_COST: Joi.number().integer().min(2).default(2),
+
   TYPEORM_TYPE: Joi.string().valid(...DATABASE_TYPES).required(),
   TYPEORM_HOST: Joi.string().required(),
   TYPEORM_PORT: Joi.number().required(),

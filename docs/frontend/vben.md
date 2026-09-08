@@ -218,7 +218,7 @@ tokenStore.setAccessToken(result.accessToken)
 
 `GET /system/menu/list` 可供 playground 菜单管理表格和父菜单选择器读取完整树；它包含按钮和停用项，并要求当前用户具有 `system:menu:list` 权限。`GET /system/menu/name-exists` 与 `GET /system/menu/path-exists` 的生成客户端解包后直接得到 boolean；编辑时将当前菜单 bigint 字符串 ID 一并传入即可排除自身。创建、修改和删除使用独立权限码，父级只能选择 catalog/menu。删除存在子节点或角色引用的菜单会收到 HTTP 409，前端应保留抽屉/列表状态并展示后端消息。
 
-菜单写事务提交后，后端会失效受该菜单启用角色映射影响的用户以及启用 super 角色用户的权限缓存。角色或用户授权的后续写服务仍必须执行对应的定向失效。
+菜单写事务提交后，后端会失效受该菜单启用角色映射影响的用户以及启用 super 角色用户的权限缓存。角色和用户授权写服务也执行对应的定向失效。
 
 ### 部门管理
 
@@ -236,10 +236,19 @@ Vben v5.7.0 角色页可使用 `GET /system/role/list` 及角色 POST、PUT、DE
 
 `super` 和部署方标记的默认角色不能停用或删除；存在用户引用的普通角色也不能删除。角色授权或状态提交成功后，后端会定向清除所有受影响用户的权限缓存。角色表和关联表仍由部署方依据实体创建，本代码不执行迁移。
 
+### 用户管理
+
+Vben v5.7.0 用户页可使用 `GET /system/user/list` 及用户 POST、PUT、DELETE。生成客户端解包后列表为 `{ items,total }`，写操作为 boolean；页面已有的 `page/pageSize/name/id/status/remark/startTime/endTime/deptId` 查询全部受支持。
+
+锁定版上游的用户类型声明了 `permissions`，但实际表单 schema 没有绑定该字段，抽屉中的菜单树插槽不会提交有效授权。项目不引入直接用户菜单授权；前端用户表单应新增角色选择并提交 `roleIds`，角色选项来自角色列表。创建表单还需增加不可变 `username` 和至少 12 个字符的初始 `password`；`name` 继续作为可编辑展示名。
+
+编辑时省略 roleIds 会保留现有角色，状态开关仍可只发送 `{ status }`。角色修改后权限缓存立即失效；停用、删除或密码重置会强制该用户已有会话失效。最后一个启用 super 管理员不能被停用、删除或移除 super 角色，前端应展示后端 HTTP 409 消息。
+
+用户表由部署方依据实体直接新建，不执行迁移，也不保留 MD5/`psalt` 数据。若已有旧环境需要保留用户，必须单独设计经审核的数据迁移和强制重置流程，不能把旧哈希直接复制到新表。
+
 ### 尚缺接口
 
-- 用户的完整 CRUD（部门、角色 CRUD 已完成）；
-- 用户状态、密码修改，以及角色/用户授权写操作中的权限缓存失效挂钩；
+- 用户表单的前端 `username/password/roleIds` 字段适配；
 - 文件上传等 Vben 常用管理接口。
 
 建议先固定 Vben 所用版本及其 mock API 契约，再以契约测试逐个补齐，避免仅凭路径名称适配。

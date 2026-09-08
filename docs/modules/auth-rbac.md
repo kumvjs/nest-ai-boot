@@ -2,7 +2,7 @@
 
 ## 登录与令牌
 
-登录使用用户名和密码。密码当前以随机盐拼接后计算 MD5；只有密码正确且 `sys_user.status=true` 才会生成两类令牌。未知账号和密码错误始终返回相同凭据错误，停用状态只在该账号密码已经验证后返回，减少账号状态枚举。
+登录使用用户名和密码。新用户表只保存 Argon2id PHC 哈希；只有密码正确且 `sys_user.status=1` 才会生成两类令牌。未知账号和密码错误始终返回相同凭据错误，停用状态只在该账号密码已经验证后返回，减少账号状态枚举。
 
 - Access Token 返回给前端，由请求头 `Authorization: Bearer <token>` 携带。
 - Refresh Token 写入 `refresh_token` HttpOnly Cookie，并在 PostgreSQL 与 Redis 中保留状态。
@@ -11,7 +11,7 @@
 
 登录与刷新均返回统一 `ResOp`，Access Token 位于 `data.accessToken`；Vben 前端的 OpenAPI 客户端在统一拦截器中解包 `data`。`/user/info` 使用专用响应 DTO 将数据库 `id` 映射为字符串 `userId`，不会直接暴露用户实体和审计字段。
 
-当前状态校验覆盖新登录。未来 M5 实现账号停用写操作时，还必须在同一业务流程中撤销该用户已有会话并清理用户/权限缓存；仅由运维直接修改数据库状态不会自动撤销已经签发的 Token。
+账号停用、删除和密码重置会撤销该用户的持久化 Refresh Token、递增或清理会话版本，并在提交后删除 Redis 令牌、在线状态、用户信息和权限缓存。仅由运维直接修改数据库状态仍不会执行这些提交后动作。
 
 JWT 校验还会检查：
 
@@ -21,24 +21,18 @@ JWT 校验还会检查：
 - 单端登录模式启用时，是否为当前有效 Token（当前配置固定允许多端登录）。
 
 ::: warning 当前安全边界
-图片验证码校验仍被注释；密码哈希仍使用快速 MD5。新建/重置密码功能在迁移到 Argon2id 前不得照搬当前 `encryptPassword()`。
+图片验证码校验仍被注释。Argon2id 默认参数只代表当前 OWASP 下限，生产发布前仍需用生产同等级硬件压测并通过 `PASSWORD_ARGON2_*` 环境变量上调成本。
 :::
 
 浏览器安全配置按环境管理：凭据 CORS 使用精确 Origin，生产要求 HTTPS 与 Secure Cookie，Cookie Domain 默认不设置，SameSite 可按同站/跨站部署选择。全局可信 Origin 守卫在 JWT 和业务逻辑之前拒绝来自非白名单 Origin 的非安全方法；没有 Origin 的 CLI/服务间调用不受影响。
 
-## 密码哈希迁移计划
+## 密码哈希模型
 
-目标算法为 Argon2id。具体内存、迭代和并行参数不能只按开发机拍脑袋设置：M5 引入依赖时，应在生产同等级硬件上基准测试，并至少满足届时的 [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) 建议。bcrypt 仅作为运行环境无法使用 Argon2id 时的评审后备选项。
+M5 按部署方“直接新建表”的要求采用 Argon2id-only 模型，不生成迁移、不加载旧 MD5，也不保留 `psalt`。`password_algorithm` 必须为 `argon2id`，`password_hash` 必须为 PHC 字符串；新建、初始化和管理端重置都走相同哈希入口。
 
-迁移必须支持一段时间内混合哈希，而不是试图离线“解密”MD5：
+默认参数为 `m=19456 KiB,t=2,p=1,hashLength=32`，达到当前 [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) 的最低建议。`PASSWORD_ARGON2_MEMORY_COST/TIME_COST/PARALLELISM/HASH_LENGTH` 只能设置为不低于该下限的整数；PHC 参数变化可通过 `needsRehash` 识别。开发机 smoke benchmark 不能代替生产硬件容量和延迟测试。
 
-1. 可逆迁移增加算法标记，现有行标记为 `legacy-md5`；现代哈希使用包含算法、salt 和参数的 PHC 字符串，双验证器准备好后才允许旧 `psalt` 为空。
-2. 新建用户和密码重置只生成 Argon2id。遗留用户密码验证成功后，在签发 Token 前直接用本次提交的明文密码生成 Argon2id，并以事务和并发保护替换旧值。
-3. 升级/重置密码同时递增持久化密码版本并撤销其他会话，避免缓存中固定版本号破坏强制重新登录语义。
-4. 只记录算法分布等聚合指标，不记录密码、salt 或哈希。超过批准期限仍未登录的遗留账号强制走安全重置。
-5. 发布窗口内保留混合验证与回滚能力；达到审核后的迁移比例并处理剩余账号后，再删除 MD5 验证分支和 `psalt`。
-
-不能把 `argon2(md5(password))` 当成最终迁移结果；这种包裹方式没有获得直接 Argon2id 哈希明文密码的完整安全属性。也不能批量改写现有哈希，因为服务端并不知道用户原密码。
+如果某个部署必须保留旧用户，需另立迁移项目并实现经审核的混合验证和强制重置，不能复制旧哈希或使用 `argon2(md5(password))` 冒充迁移。本仓库当前 fresh-table 路径会直接拒绝非 Argon2id 算法。
 
 ## RBAC 数据模型
 
@@ -78,6 +72,12 @@ sys_user ───────> sys_dept（nullable，删除 RESTRICT）
 
 `super` 和 `is_default=true` 角色不能停用或删除，普通角色存在任何用户关系时也不能删除。`sys_user_role` 使用命名的用户/角色索引、唯一用户角色对以及 `role_id ON DELETE RESTRICT`。角色更新提交后，只失效当前分配该角色用户的 `auth:user:permissions:*` 缓存。角色停用不改写用户账号或 `sys_user_role`；权限变化由下一次缓存回源立即反映。本批不生成数据库迁移，部署方负责按新映射创建角色相关表和外键。
 
+## 用户管理与角色分配
+
+系统用户以不可变 `username` 登录，以可编辑 `name` 供 Vben 展示；numeric `status`、`dept_id`、`remark`、`timezone` 和已有资料列直接持久化。用户名只在未软删除记录中唯一。API 使用 `roleIds` 覆盖写入 `sys_user_role`，不接受上游含义不明且未绑定表单的用户 `permissions`，也不建立 `sys_user_menu`。
+
+用户创建和角色替换会在可串行化事务中锁定并验证启用部门与全部启用角色。任何更新提交后失效用户信息和权限缓存；停用、密码重置和删除还撤销全部会话。删除会清理用户角色映射后软删除用户。若目标是当前启用的 super 用户，服务会确认仍有另一名启用 super，否则拒绝停用、删除或角色移除。
+
 ```ts
 @RequirePermissions('system:user:list')
 @Get('list')
@@ -92,7 +92,7 @@ review() {}
 
 ## 当前完成度
 
-- 用户信息、有效权限码查询和用户分页列表已有接口。
+- 用户信息、有效权限码查询和完整用户分页/CRUD 已有接口。
 - `/auth/codes` 返回菜单/按钮 `authCode` 数组，不返回角色 code；角色身份仍由 `/user/info.roles` 表达。
 - `/menu/all` 从启用角色映射生成动态路由树，补齐授权节点的有效祖先；超级角色获得全部有效路由。
 - `/system/menu/list` 使用 `system:menu:list` 保护，返回包括按钮和停用项在内的完整管理树。
@@ -102,5 +102,5 @@ review() {}
 - `/system/role/list` 及角色 POST、PUT、DELETE 已使用各自 `system:role:*` 权限，提供 Vben 分页、局部状态更新和事务性菜单授权。
 - 菜单实体已采用 Vben 五类型、JSONB 元数据、numeric 状态与 bigint `pid` 自关联；权限查询服务和按用户缓存失效入口已经存在。
 - 角色实体采用不可变 code、numeric 状态和活动名称唯一约束；角色授权变更会在提交后定向失效受影响用户权限缓存。
-- 菜单、部门与角色 Swagger DTO 已接入管理查询和 CRUD；用户完整管理流程尚未实现。
-- 菜单和角色写服务均执行定向权限缓存失效；后续用户角色分配仍必须复用同一原则。
+- 菜单、部门、角色和用户 Swagger DTO 已接入管理查询和 CRUD。
+- 菜单、角色和用户写服务均执行定向权限缓存失效；用户停用、删除和密码重置还强制撤销已有会话。

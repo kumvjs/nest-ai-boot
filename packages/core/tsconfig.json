@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "incremental": true,
+    "ignoreDeprecations": "6.0",
     "target": "ES2023",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "baseUrl": ".",
     "rootDir": "./",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "baseUrl": ".",
     "paths": {
       "#/*": [
         "src/*"

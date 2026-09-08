@@ -11,7 +11,7 @@
 
 主要表包括用户、角色、菜单、用户角色、角色菜单、Refresh Token、登录日志和验证码日志。软删除由 `deleted_at` 表示。
 
-`sys_user` 的 Vben 资料字段包含可空的 `avatar`、`home_path` 和 `description`。`/user/info` 在 DTO 边界分别映射为 `avatar`、`homePath` 和 `desc`；历史用户的 NULL 值返回空字符串。
+`sys_user` 直接保存不可变登录账号、展示名、numeric 状态、部门、备注、时区、可空 `avatar/home_path/description`、Argon2id PHC 哈希和会话版本。`/user/info` 在 DTO 边界映射资料字段且不会暴露凭据；`/system/user/list` 也只返回专用管理 DTO。
 
 ## Redis 缓存
 
@@ -28,6 +28,8 @@
 用户权限缓存使用 `auth:user:permissions:<userId>`，值中包含 `schemaVersion` 和 `codes`。`/auth/codes` 与 `RbacGuard` 共享同一个缓存回源入口：Redis 未命中时从角色菜单关系加载并回填，版本匹配且 `codes` 为空数组代表用户确实没有权限，不能被误判为未命中。旧版无版本数组或未知版本会惰性回源并覆盖，不要求发布时全量清 Redis；未来权限缓存结构或授权语义变化时必须递增 schema 版本。
 
 `AuthService.invalidatePermissionsCache(userId)` 用于定向删除；菜单、角色和用户授权写服务必须在数据库事务成功提交后调用，避免回滚事务提前清除缓存或继续使用旧权限。
+
+用户资料或角色更新会删除 `user:info:<id>` 与 `auth:user:permissions:<id>`。停用、删除或密码重置还按用户前缀扫描删除 Access/Refresh Token 状态、清理在线 key，并先更新或删除 `auth:user:password_version:<id>`，使旧 JWT 立即无法通过会话版本检查；数据库 Refresh Token 在同一写事务中删除。
 
 ## 审计与日志
 

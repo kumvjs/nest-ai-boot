@@ -1,51 +1,55 @@
 import type { Relation } from 'typeorm'
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
+import { ApiHideProperty } from '@nestjs/swagger'
 import { Exclude } from 'class-transformer'
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
 import { CommonEntity } from '#/common/entity/common.entity.js'
 import { RefreshTokenEntity } from '#/modules/auth/entities/refresh-token.entity.js'
 import { SysDeptEntity } from '#/modules/system/dept/entities/dept.entity.js'
-import { md5 } from '#/utils/index.js'
+import { PasswordAlgorithm, UserStatus } from '#/modules/system/sys-user/sys-user.types.js'
+import { hashPassword, passwordHashNeedsRehash, verifyPasswordHash } from '../password-hasher.js'
 import SysUserRoleEntity from './user-role.entity.js'
 
 @Entity({ name: 'sys_user' })
+@Check('chk_sys_user_status', '"status" IN (0, 1)')
+@Check('chk_sys_user_password_algorithm', '"password_algorithm" = \'argon2id\'')
+@Check('chk_sys_user_password_hash', '"password_hash" LIKE \'$argon2id$%\'')
+@Check('chk_sys_user_session_version', '"session_version" > 0')
 export class SysUserEntity extends CommonEntity {
   @Column({ length: 100 })
-  @Index('username', { unique: true })
-  @ApiProperty({ description: '账号' })
-  username!: string
-
-  @Exclude()
-  @Column({ length: 255, select: false })
-  password_hash!: string
-
-  @Column({ length: 32, select: false })
-  @Exclude()
-  psalt: string
-
-  @Column({ length: 50 })
-  @ApiProperty({ description: '用户角色' })
-  role: string
+  @Index('uq_sys_user_username', { unique: true, where: '"deleted_at" IS NULL' })
+  username: string
 
   @Column({ length: 100 })
-  @ApiProperty({ description: '昵称' })
-  nickname: string
+  @Index('idx_sys_user_name')
+  name: string
+
+  @Exclude()
+  @Column({ length: 255, name: 'password_hash', select: false })
+  passwordHash: string
+
+  @Exclude()
+  @Column({
+    default: PasswordAlgorithm.ARGON2ID,
+    length: 16,
+    name: 'password_algorithm',
+    select: false,
+  })
+  passwordAlgorithm: PasswordAlgorithm
+
+  @Column({ default: 1, name: 'session_version', type: 'integer' })
+  sessionVersion: number
 
   @Column({ length: 500, nullable: true })
-  @ApiProperty({ description: '头像 URL', nullable: true, required: false })
   avatar?: string | null
 
   @Column({ length: 255, name: 'home_path', nullable: true })
-  @ApiProperty({ description: '登录后首页路径', nullable: true, required: false })
   homePath?: string | null
 
   @Column({ length: 500, nullable: true })
-  @ApiProperty({ description: '用户描述', nullable: true, required: false })
   description?: string | null
 
   @Column({ name: 'dept_id', type: 'bigint', nullable: true })
   @Index('idx_sys_user_dept_id')
-  @ApiProperty({ description: '所属部门 ID', nullable: true, required: false, type: String })
   deptId?: string | null
 
   @ApiHideProperty()
@@ -56,32 +60,37 @@ export class SysUserEntity extends CommonEntity {
   @JoinColumn({ name: 'dept_id' })
   dept?: Relation<SysDeptEntity> | null
 
-  @Column({
-    type: 'boolean',
-    default: false,
-  })
-  @ApiProperty({ description: '启用状态' })
-  status: boolean
+  @Column({ length: 255, nullable: true })
+  remark?: string | null
+
+  @Column({ length: 64, nullable: true })
+  timezone?: string | null
+
+  @Column({ default: UserStatus.ENABLED, type: 'smallint' })
+  @Index('idx_sys_user_status')
+  status: UserStatus
 
   @ApiHideProperty()
-  @OneToMany(() => SysUserRoleEntity, ur => ur.user, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => SysUserRoleEntity, userRole => userRole.user)
   userRoles: Relation<SysUserRoleEntity[]>
 
-  @OneToMany(() => RefreshTokenEntity, (refreshToken: RefreshTokenEntity) => refreshToken.user, {
-    cascade: true,
-  })
+  @ApiHideProperty()
+  @OneToMany(() => RefreshTokenEntity, refreshToken => refreshToken.user)
   refreshTokens: Relation<RefreshTokenEntity[]>
 
-  encryptPassword(password: string, psalt: string) {
-    return md5(`${password}${psalt}`)
+  async setPassword(password: string): Promise<void> {
+    this.passwordHash = await hashPassword(password)
+    this.passwordAlgorithm = PasswordAlgorithm.ARGON2ID
   }
 
-  verifyPassword(password: string) {
-    return (
-      this.encryptPassword(password, this.psalt)
-      === this.password_hash
-    )
+  async verifyPassword(password: string): Promise<boolean> {
+    if (this.passwordAlgorithm !== PasswordAlgorithm.ARGON2ID)
+      return false
+    return verifyPasswordHash(this.passwordHash, password)
+  }
+
+  passwordNeedsRehash(): boolean {
+    return this.passwordAlgorithm !== PasswordAlgorithm.ARGON2ID
+      || passwordHashNeedsRehash(this.passwordHash)
   }
 }

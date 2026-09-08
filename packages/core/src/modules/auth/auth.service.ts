@@ -33,14 +33,18 @@ export class AuthService {
     if (!user)
       throw new BusinessException(ERROR_CODES.USER_PASSWORD_ERROR) // 不提示账户不存在 防止扫用户账号
 
-    if (!user.verifyPassword(password))
+    if (!await user.verifyPassword(password))
       throw new BusinessException(ERROR_CODES.USER_PASSWORD_ERROR)
 
     if (!user.status)
       throw new BusinessException(ERROR_CODES.USER_ACCOUNT_DISABLED)
 
-    const { password_hash, psalt, ...result } = user
-    return result
+    return {
+      id: user.id,
+      sessionVersion: user.sessionVersion,
+      status: user.status,
+      username: user.username,
+    }
   }
 
   /**
@@ -61,15 +65,15 @@ export class AuthService {
     const refreshTokenPayload: AuthUser = {
       jwtUuid: generateUUID(),
       uid: user.id,
-      pv: 1,
+      pv: user.sessionVersion,
     }
     const refreshToken = await this.tokenService.generateRefreshToken(refreshTokenPayload, dayjs())
 
     // 包含access_token和refresh_token
-    const accessToken = await this.tokenService.generateAccessToken(user.id)
+    const accessToken = await this.tokenService.generateAccessToken(user.id, user.sessionVersion)
 
     // 设置密码版本号 当密码修改时，版本号+1
-    await this.cacheService.setCache(authKeys.passwordVersion(user.id), 1)
+    await this.cacheService.setCache(authKeys.passwordVersion(user.id), user.sessionVersion)
 
     // 设置菜单权限
     const permissions = await this.menuService.getPermissionsByUserId(user.id)

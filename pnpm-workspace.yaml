@@ -9,6 +9,8 @@ allowBuilds:
   '@hyperjump/pact': true
   '@parcel/watcher': true
   '@scarf/scarf': true
+  argon2: true
+  protobufjs: false
   puppeteer: false
   unrs-resolver: true
 minimumReleaseAgeExclude:

@@ -2,7 +2,7 @@
 
 Nest AI Boot 是一个以 NestJS 12 和 Fastify 为 HTTP 运行时的后端基础工程，目标是承载 AI Agents / 多 Agent 业务，并向 Vben Admin 风格的管理前端提供认证、用户、权限与实时通信能力。
 
-当前仓库的重点是通用后端底座。AI 模块尚未进入业务开发阶段，系统管理中的菜单和角色接口也仍是控制器骨架。
+当前仓库的重点是通用后端底座。AI 模块尚未进入业务开发阶段；系统管理的菜单、部门、角色和用户后端接口已经形成可用闭环。
 
 ## 技术栈
 
@@ -23,12 +23,12 @@ Nest AI Boot 是一个以 NestJS 12 和 Fastify 为 HTTP 运行时的后端基�
   <tbody>
     <tr><td>应用启动与配置</td><td>可用</td><td>环境变量校验、Fastify 插件、全局前缀、CORS、静态资源与优雅关闭。</td></tr>
     <tr><td>认证</td><td>基本可用</td><td>登录、退出、Refresh Token 轮换、JWT 校验、令牌黑名单和密码版本检查。</td></tr>
-    <tr><td>RBAC</td><td>角色管理可用</td><td>用户—角色—菜单权限关系、权限装饰器和全局 Guard；菜单与角色 CRUD、授权事务和定向缓存失效已实现。</td></tr>
-    <tr><td>用户</td><td>部分可用</td><td>当前用户信息、系统用户分页列表；创建、编辑、删除仍是 DTO 骨架。</td></tr>
+    <tr><td>RBAC</td><td>管理闭环可用</td><td>用户—角色—菜单权限关系、权限装饰器和全局 Guard；菜单、角色和用户授权事务及定向缓存失效已实现。</td></tr>
+    <tr><td>用户</td><td>可用</td><td>当前用户信息、Vben 分页、CRUD、角色分配、Argon2id 密码重置、强制下线和最后 super 保护。</td></tr>
     <tr><td>Redis 缓存</td><td>可用</td><td>统一序列化、空值缓存、TTL 抖动、分布式锁和前缀扫描删除。</td></tr>
     <tr><td>WebSocket</td><td>基础设施</td><td>基类、鉴权复用、会话与推送服务已存在，但没有具体 Gateway / 业务事件。</td></tr>
     <tr><td>AI Agents</td><td>规划中</td><td>没有对外 API、Agent 编排、工具系统、记忆或持久化实现。</td></tr>
-    <tr><td>Vben 适配</td><td>进行中</td><td>登录、用户信息、权限码、动态菜单、菜单、部门与角色管理已对齐；用户管理仍未完成，响应解包仍需前端配置。</td></tr>
+    <tr><td>Vben 适配</td><td>系统管理后端完成</td><td>登录、用户信息、权限码、动态菜单及菜单、部门、角色、用户管理已对齐；用户表单需增加 username/password/roleIds，响应解包仍需前端配置。</td></tr>
   </tbody>
 </table>
 

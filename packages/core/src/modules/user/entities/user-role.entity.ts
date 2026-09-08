@@ -13,7 +13,7 @@ export default class SysUserRoleEntity extends CommonEntity {
   @ApiProperty()
   userId: string
 
-  @ManyToOne(() => SysUserEntity, user => user.userRoles)
+  @ManyToOne(() => SysUserEntity, user => user.userRoles, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: Relation<SysUserEntity>
 

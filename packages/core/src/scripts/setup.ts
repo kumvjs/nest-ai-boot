@@ -9,6 +9,7 @@ import dataSource, { dataSourceOptions } from '../config/database.config.js'
 import { Roles } from '../modules/auth/auth.constant.js'
 import { SysRoleEntity } from '../modules/system/role/entities/role.entity.js'
 import { RoleStatus } from '../modules/system/role/role.types.js'
+import { UserStatus } from '../modules/system/sys-user/sys-user.types.js'
 import SysUserRoleEntity from '../modules/user/entities/user-role.entity.js'
 import { SysUserEntity } from '../modules/user/entities/user.entity.js'
 
@@ -70,15 +71,13 @@ async function createSuper(username: string, password: string): Promise<void> {
       }))
     }
 
-    const psalt = randomBytes(16).toString('hex')
     const superUser = userRepository.create({
+      name: username,
       username,
-      psalt,
-      role: Roles.SUPER,
-      nickname: username,
-      status: true,
+      sessionVersion: 1,
+      status: UserStatus.ENABLED,
     })
-    superUser.password_hash = superUser.encryptPassword(password, psalt)
+    await superUser.setPassword(password)
     await userRepository.save(superUser)
 
     await userRoleRepository.save(userRoleRepository.create({
@@ -124,14 +123,16 @@ async function main(): Promise<void> {
 
   try {
     const username = (await readline.question('Super username: ')).trim()
-    if (!username)
-      throw new Error('Super username cannot be empty.')
+    if (username.length < 4)
+      throw new Error('Super username must contain at least 4 characters.')
     if (username.length > 100)
       throw new Error('Super username cannot exceed 100 characters.')
 
     const password = await askPassword('Super password: ')
-    if (password.length < 8)
-      throw new Error('Super password must contain at least 8 characters.')
+    if (password.length < 12)
+      throw new Error('Super password must contain at least 12 characters.')
+    if (password.length > 128)
+      throw new Error('Super password cannot exceed 128 characters.')
 
     const confirmation = await askPassword('Confirm password: ')
     if (password !== confirmation)

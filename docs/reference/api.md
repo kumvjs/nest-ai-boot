@@ -26,7 +26,10 @@
 | `PUT` | `/system/role/:id` | JWT + `system:role:update` | 局部修改角色或原子替换授权，返回 boolean |
 | `DELETE` | `/system/role/:id` | JWT + `system:role:delete` | 删除未受保护且无用户引用的角色，返回 boolean |
 | `GET` | `/user/info` | JWT | 返回专用 DTO：`userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 与角色数组 |
-| `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
+| `GET` | `/system/user/list` | JWT + `system:user:list` | 按 Vben 查询条件返回 `{ items,total }` 用户分页 |
+| `POST` | `/system/user` | JWT + `system:user:create` | 新增用户并分配角色，返回 boolean |
+| `PUT` | `/system/user/:id` | JWT + `system:user:update` | 局部修改用户、角色或重置密码，返回 boolean |
+| `DELETE` | `/system/user/:id` | JWT + `system:user:delete` | 撤销会话并软删除用户，返回 boolean |
 
 `AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。系统模块已发布部门、角色与菜单管理路径；菜单模块还提供运行时 `/menu/all`。
 
@@ -91,20 +94,23 @@ Content-Type: application/json
 }
 ```
 
-该对象位于统一响应的 `data` 字段。用户名至少 4 个字符，密码至少 6 个字符；初始化脚本要求超级管理员密码至少 8 个字符。
+该对象位于统一响应的 `data` 字段。管理端新建、重置及初始化脚本密码均要求 12–128 个字符，最终只保存 Argon2id PHC 哈希；登录请求为兼容既有客户端仍接受至少 6 个字符，但限制最大 128 个字符。
 
 只有启用用户可以登录。未知账号或密码错误使用同一个凭据错误；账号存在、密码正确但状态已停用时返回 `USER_ACCOUNT_DISABLED`，且不会签发 Token、写入登录缓存或记录成功登录日志。
 
 `/auth/refresh` 同样保持统一 `ResOp` 响应，新的 Access Token 位于 `data.accessToken`。前端生成的 OpenAPI 客户端负责统一解包 `data`，后端不会为 Vben mock 的裸字符串响应增加例外。
 
-## 用户列表分页
+## 用户管理
 
-`nestjs-paginate` 负责解析 `/system/user/list` 查询参数。常用参数包括 `page`、`limit`、`sortBy`；实际格式以项目所用 `nestjs-paginate` 版本和 Swagger 输出为准。
+`GET /api/system/user/list` 接受 `page`、`pageSize`、`name`、`id`、`status`、`remark`、`startTime`、`endTime`、`deptId`。`name` 同时匹配展示名和登录账号，ID 使用 PostgreSQL bigint 字符串，状态只接受数值 `0 | 1`。响应业务数据为 `{ items,total }`，每项包含 `id/username/name/deptId/status/remark/createTime/roleIds`。
 
-```http
-GET /api/system/user/list?page=1&limit=10&sortBy=nickname:ASC
-Authorization: Bearer eyJ...
-```
+`POST /api/system/user` 在 Vben 的 `name/deptId/status/remark` 基础上要求 `username/password/roleIds`。username 是不可变登录身份，name 可编辑；password 只作为输入且不会回显；roleIds 是启用角色 ID，不是菜单 ID。所属部门必须存在且启用，并且至少分配一个启用角色。
+
+`PUT /api/system/user/:id` 为局部更新，状态开关可只提交 `{ status }`。省略 roleIds 保留角色，提交 roleIds 时原子覆盖用户角色；提交 password 使用 Argon2id 重置密码。停用或密码重置会递增持久化会话版本、删除该用户所有 Refresh Token，并清理 Redis 中的令牌、在线状态、用户信息和权限缓存。Refresh 接口还会校验数据库中的启用状态及会话版本。
+
+`DELETE /api/system/user/:id` 先删除 Refresh Token 和用户角色关系，再软删除用户并清理缓存。用户名唯一索引只覆盖未软删除记录，因此可由一个全新用户 ID 重新使用。系统拒绝停用、删除或移除最后一个启用 super 用户的 super 角色。
+
+用户密码表只接受 `password_algorithm=argon2id` 与 `$argon2id$...` PHC 字符串，并保存正数 `session_version`。本批不生成迁移；部署方按实体直接创建新表，不迁移 MD5/`psalt` 或旧冗余 role 字段。
 
 ## Swagger
 

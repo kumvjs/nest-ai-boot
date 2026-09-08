@@ -33,7 +33,7 @@ export class UserService {
     return this.userRepository
       .createQueryBuilder('user')
       .where('user.username = :username', { username })
-      .addSelect(['user.password_hash', 'user.psalt']) // 捞出密码
+      .addSelect(['user.passwordAlgorithm', 'user.passwordHash'])
       .getOne()
   }
 
@@ -58,9 +58,16 @@ export class UserService {
       homePath: u.homePath ?? '',
       userId: u.id,
       username: u.username,
-      realName: u.nickname,
+      realName: u.name,
       roles,
     }
+  }
+
+  async getUserSessionState(id: string): Promise<Pick<SysUserEntity, 'id' | 'sessionVersion' | 'status'> | null> {
+    return this.userRepository.findOne({
+      select: { id: true, sessionVersion: true, status: true },
+      where: { id },
+    })
   }
 
   getCachedUserById(id: string) {

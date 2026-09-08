@@ -9,6 +9,7 @@ import {
   authKeys,
   USER_PERMISSIONS_CACHE_SCHEMA_VERSION,
 } from '#/shared/cache/keys/auth.keys.js'
+import { PasswordAlgorithm, UserStatus } from '../system/sys-user/sys-user.types.js'
 import { AuthService } from './auth.service.js'
 
 jest.mock('#/config/index.js', () => ({
@@ -110,9 +111,10 @@ describe('vben auth service contracts', () => {
   it('rejects a disabled user before issuing tokens or writing login state', async () => {
     userService.findUserForLogin.mockResolvedValue({
       id: '42',
-      password_hash: 'legacy-hash',
-      psalt: 'legacy-salt',
-      status: false,
+      passwordAlgorithm: PasswordAlgorithm.ARGON2ID,
+      passwordHash: 'argon2-hash',
+      sessionVersion: 1,
+      status: UserStatus.DISABLED,
       verifyPassword: () => true,
     })
 
@@ -131,12 +133,13 @@ describe('vben auth service contracts', () => {
     expect(loginLogService.create).not.toHaveBeenCalled()
   })
 
-  it('removes password hash and legacy salt from validated login data', async () => {
+  it('returns only the authentication state after password validation', async () => {
     userService.findUserForLogin.mockResolvedValue({
       id: '42',
-      password_hash: 'legacy-hash',
-      psalt: 'legacy-salt',
-      status: true,
+      passwordAlgorithm: PasswordAlgorithm.ARGON2ID,
+      passwordHash: 'argon2-hash',
+      sessionVersion: 3,
+      status: UserStatus.ENABLED,
       username: 'enabled-user',
       verifyPassword: () => true,
     })
@@ -145,11 +148,12 @@ describe('vben auth service contracts', () => {
 
     expect(validated).toMatchObject({
       id: '42',
-      status: true,
+      sessionVersion: 3,
+      status: UserStatus.ENABLED,
       username: 'enabled-user',
     })
-    expect(validated).not.toHaveProperty('password_hash')
-    expect(validated).not.toHaveProperty('psalt')
+    expect(validated).not.toHaveProperty('passwordHash')
+    expect(validated).not.toHaveProperty('passwordAlgorithm')
   })
 
   it('returns a cached empty permission list without querying PostgreSQL', async () => {

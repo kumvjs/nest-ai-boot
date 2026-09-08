@@ -155,3 +155,14 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Enabled `super` roles and roles marked `is_default` cannot be disabled or deleted; deletion is also rejected while any user-role reference remains.
 - [x] Mapping and status writes invalidate every currently assigned user's effective-permission cache after commit without scanning Redis; name/remark writes use the same safe invalidation path.
 - [x] Focused/full tests, test type-checking, changed-file ESLint, Nest build, locked Vben fixtures/diff, docs, and diff checks pass proportionally.
+
+## Completed batch: M5
+
+- [x] `SysUserEntity` directly models immutable username, editable Vben name, numeric status, department, remark/timezone/profile fields, Argon2id PHC credentials, session version, audit fields, and active-only username uniqueness; no migration or DDL is generated.
+- [x] `GET /system/user/list` validates the locked Vben filters and returns `{ items,total }` with bigint strings, `createdAt -> createTime`, and deterministic `roleIds`.
+- [x] POST/PUT/DELETE use dedicated permissions, explicit Swagger DTOs, `ResOp<boolean>`, PostgreSQL bigint validation, serializable transactions, and stable conflict behavior.
+- [x] User authorization remains role-based: all submitted enabled roles are locked and validated before the user-role set is replaced atomically; omitted `roleIds` preserve existing mappings.
+- [x] Create and reset accept only 12–128 character passwords and store maintained Argon2id PHC hashes at or above the current OWASP floor; legacy MD5, salt, and redundant role columns are absent from the fresh schema.
+- [x] Disable/password-reset/delete revoke persisted Refresh Tokens and targeted Redis session state, while all updates invalidate user-info and effective-permission caches after commit.
+- [x] Access validation rejects disabled users, refresh validates persisted status/session version, and serializable last-super checks preserve at least one enabled super-administrator path.
+- [x] Soft delete removes user-role mappings and allows intentional username reuse only for a new user ID; audit fields continue through the shared subscriber.

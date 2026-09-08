@@ -1,7 +1,7 @@
 import type { JwtService } from '@nestjs/jwt'
 import type { Repository } from 'typeorm'
 import type { SecurityConfig } from '#/config/index.js'
-import type { RoleService } from '#/modules/system/role/role.service.js'
+import type { UserService } from '#/modules/user/user.service.js'
 import type { CacheService } from '#/shared/cache/cache.service.js'
 import type { RefreshTokenEntity } from '../entities/refresh-token.entity.js'
 import type { JwtStrategy } from '../strategies/jwt.strategy.js'
@@ -27,6 +27,9 @@ describe('vben refresh-token lifecycle', () => {
     findOne: jest.fn(),
     save: jest.fn(),
   }
+  const userService = {
+    getUserSessionState: jest.fn(),
+  }
   const security = {
     jwtExprire: 3_600,
     refreshExpire: 604_800,
@@ -36,7 +39,7 @@ describe('vben refresh-token lifecycle', () => {
     cacheService as unknown as CacheService,
     jwtService as unknown as JwtService,
     {} as JwtStrategy,
-    {} as RoleService,
+    userService as unknown as UserService,
     security,
     refreshTokenRepo as unknown as Repository<RefreshTokenEntity>,
   )
@@ -58,6 +61,11 @@ describe('vben refresh-token lifecycle', () => {
       value: 'old-refresh-token',
     })
     refreshTokenRepo.save.mockResolvedValue(undefined)
+    userService.getUserSessionState.mockResolvedValue({
+      id: '42',
+      sessionVersion: 1,
+      status: 1,
+    })
   })
 
   it('rotates once and atomically rejects replay of the consumed token', async () => {
@@ -94,6 +102,23 @@ describe('vben refresh-token lifecycle', () => {
     })
     expect(refreshTokenRepo.delete).not.toHaveBeenCalled()
     expect(jwtService.signAsync).not.toHaveBeenCalled()
+  })
+
+  it('rejects refresh after disable or session-version revocation', async () => {
+    userService.getUserSessionState.mockResolvedValueOnce({
+      id: '42',
+      sessionVersion: 1,
+      status: 0,
+    })
+    await expect(service.refreshToken('disabled-refresh-token')).rejects.toMatchObject({ status: 401 })
+
+    userService.getUserSessionState.mockResolvedValueOnce({
+      id: '42',
+      sessionVersion: 2,
+      status: 1,
+    })
+    await expect(service.refreshToken('old-version-refresh-token')).rejects.toMatchObject({ status: 401 })
+    expect(refreshTokenRepo.delete).not.toHaveBeenCalled()
   })
 
   it('revokes the persisted and cached refresh token during logout', async () => {
