@@ -8,6 +8,7 @@ import { Writable } from 'node:stream'
 import dataSource, { dataSourceOptions } from '../config/database.config.js'
 import { Roles } from '../modules/auth/auth.constant.js'
 import { SysRoleEntity } from '../modules/system/role/entities/role.entity.js'
+import { RoleStatus } from '../modules/system/role/role.types.js'
 import SysUserRoleEntity from '../modules/user/entities/user-role.entity.js'
 import { SysUserEntity } from '../modules/user/entities/user.entity.js'
 
@@ -64,8 +65,8 @@ async function createSuper(username: string, password: string): Promise<void> {
         name: SUPER_ROLE_NAME,
         code: Roles.SUPER,
         remark: 'System super',
-        status: true,
-        default: false,
+        status: RoleStatus.ENABLED,
+        isDefault: false,
       }))
     }
 

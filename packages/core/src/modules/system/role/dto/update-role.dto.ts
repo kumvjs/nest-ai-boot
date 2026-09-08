@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateRoleDto } from './create-role.dto.js';
+import { OmitType, PartialType } from '@nestjs/swagger'
+import { CreateRoleDto } from './create-role.dto.js'
 
-export class UpdateRoleDto extends PartialType(CreateRoleDto) {}
+export class UpdateRoleDto extends PartialType(OmitType(CreateRoleDto, ['code'] as const)) {}

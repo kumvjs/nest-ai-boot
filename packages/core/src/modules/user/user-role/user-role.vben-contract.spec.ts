@@ -1,4 +1,5 @@
 import type { Repository } from 'typeorm'
+import { RoleStatus } from '#/modules/system/role/role.types.js'
 import SysUserRoleEntity from '../entities/user-role.entity.js'
 import { UserRoleService } from './user-role.service.js'
 
@@ -32,7 +33,7 @@ describe('effective user roles', () => {
 
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'role.status = :status',
-      { status: true },
+      { status: RoleStatus.ENABLED },
     )
   })
 })

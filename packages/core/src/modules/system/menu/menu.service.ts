@@ -11,6 +11,7 @@ import { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
 import { CacheService } from '#/shared/cache/cache.service.js'
 import { authKeys } from '#/shared/cache/keys/auth.keys.js'
 import SysRoleMenuEntity from '../role/entities/role-menu.entity.js'
+import { RoleStatus } from '../role/role.types.js'
 import { SysMenuEntity } from './entities/menu.entity.js'
 import { assertMenuId, buildMenuWriteState, isParentCapable } from './menu-write.rules.js'
 import { MenuStatus, MenuType } from './menu.types.js'
@@ -176,7 +177,7 @@ export class MenuService {
       .innerJoin('menu.roleMenus', 'roleMenu')
       .innerJoin('roleMenu.role', 'role')
       .where('roleMenu.roleId IN (:...roleIds)', { roleIds })
-      .andWhere('role.status = :roleStatus', { roleStatus: true })
+      .andWhere('role.status = :roleStatus', { roleStatus: RoleStatus.ENABLED })
       .andWhere('menu.status = :menuStatus', { menuStatus: MenuStatus.ENABLED })
       .andWhere('menu.type IN (:...permissionTypes)', {
         permissionTypes: [MenuType.MENU, MenuType.BUTTON],
@@ -253,8 +254,8 @@ export class MenuService {
     manager: EntityManager,
     menuId?: string,
   ): Promise<string[]> {
-    const parameters: Record<string, boolean | string> = {
-      roleStatus: true,
+    const parameters: Record<string, boolean | number | string> = {
+      roleStatus: RoleStatus.ENABLED,
       superCode: Roles.SUPER,
     }
     let affectedRoleCondition = 'role.code = :superCode'
@@ -371,7 +372,7 @@ export class MenuService {
       .innerJoin('menu.roleMenus', 'roleMenu')
       .innerJoin('roleMenu.role', 'role')
       .where('roleMenu.roleId IN (:...roleIds)', { roleIds })
-      .andWhere('role.status = :roleStatus', { roleStatus: true })
+      .andWhere('role.status = :roleStatus', { roleStatus: RoleStatus.ENABLED })
       .andWhere('menu.status = :menuStatus', { menuStatus: MenuStatus.ENABLED })
       .getRawMany<{ id: string }>()
 

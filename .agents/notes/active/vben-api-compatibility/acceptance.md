@@ -144,3 +144,14 @@ Later implementation acceptance is defined per milestone in `plan.md` and must b
 - [x] Parent existence, self/descendant cycles, sibling duplicate names, active child deletion, and user-reference deletion are rejected; database constraints remain the final concurrent-write safeguard.
 - [x] Disabling a department changes only that department and never silently changes child departments or users.
 - [x] Focused/full tests, test type-checking, changed-file ESLint, Nest build, locked Vben fixtures/diff, docs, and diff checks pass proportionally.
+
+## Completed batch: M4
+
+- [x] `SysRoleEntity` directly models immutable globally unique `code`, active-row unique display `name`, numeric `status`, nullable `remark`, deployment-owned `is_default`, audit fields, and soft deletion; no migration or DDL is generated or executed.
+- [x] `sys_role_menu` retains constrained bigint role/menu relationships and unique mappings; role permission replacement validates every active menu ID before changing mappings.
+- [x] `GET /system/role/list` accepts validated `page/pageSize/name/id/status/remark/startTime/endTime` filters and returns `{ items,total }` with bigint strings, `createdAt -> createTime`, and deterministic permission-ID arrays.
+- [x] POST/PUT/DELETE use dedicated permissions, explicit Swagger DTOs, `ResOp<boolean>`, PostgreSQL bigint validation, serializable transactions, and stable conflict/error behavior.
+- [x] Role codes cannot change after creation; omitted custom codes are generated, and public creation cannot claim reserved built-in codes.
+- [x] Enabled `super` roles and roles marked `is_default` cannot be disabled or deleted; deletion is also rejected while any user-role reference remains.
+- [x] Mapping and status writes invalidate every currently assigned user's effective-permission cache after commit without scanning Redis; name/remark writes use the same safe invalidation path.
+- [x] Focused/full tests, test type-checking, changed-file ESLint, Nest build, locked Vben fixtures/diff, docs, and diff checks pass proportionally.

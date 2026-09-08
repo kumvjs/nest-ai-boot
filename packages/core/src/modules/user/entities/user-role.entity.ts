@@ -6,10 +6,10 @@ import { SysRoleEntity } from '#/modules/system/role/entities/role.entity.js'
 import { SysUserEntity } from './user.entity.js'
 
 @Entity({ name: 'sys_user_role' })
-@Unique(['userId', 'roleId'])
+@Unique('uq_sys_user_role_user_role', ['userId', 'roleId'])
 export default class SysUserRoleEntity extends CommonEntity {
   @Column({ type: 'bigint', name: 'user_id' })
-  @Index()
+  @Index('idx_sys_user_role_user_id')
   @ApiProperty()
   userId: string
 
@@ -18,11 +18,11 @@ export default class SysUserRoleEntity extends CommonEntity {
   user: Relation<SysUserEntity>
 
   @Column({ type: 'bigint', name: 'role_id' })
-  @Index()
+  @Index('idx_sys_user_role_role_id')
   @ApiProperty()
   roleId: string
 
-  @ManyToOne(() => SysRoleEntity, role => role.userRoles)
+  @ManyToOne(() => SysRoleEntity, role => role.userRoles, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'role_id' })
   role: Relation<SysRoleEntity>
 }

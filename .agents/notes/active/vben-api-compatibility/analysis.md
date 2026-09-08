@@ -59,10 +59,10 @@ Paths omit this project's default `/api` global prefix.
 | Menu | POST `/system/menu` | Vben menu form | **Missing** | Implemented in M2.6 |
 | Menu | PUT `/system/menu/:id` | Vben menu form | **Missing** | Implemented in M2.6 |
 | Menu | DELETE `/system/menu/:id` | id | **Missing** | Implemented in M2.6 |
-| Role | GET `/system/role/list` | `page,pageSize,name,id,status,remark,startTime,endTime` | Yes | Missing |
-| Role | POST `/system/role` | `name,status,remark,permissions` | **Missing** | Missing |
-| Role | PUT `/system/role/:id` | partial update, including status | **Missing** | Missing |
-| Role | DELETE `/system/role/:id` | id | **Missing** | Missing |
+| Role | GET `/system/role/list` | `page,pageSize,name,id,status,remark,startTime,endTime` | Yes | Implemented in M4 |
+| Role | POST `/system/role` | `name,status,remark,permissions` | **Missing** | Implemented in M4 |
+| Role | PUT `/system/role/:id` | partial update, including status | **Missing** | Implemented in M4 |
+| Role | DELETE `/system/role/:id` | id | **Missing** | Implemented in M4 |
 | User | GET `/system/user/list` | role-list filters plus `deptId`; `{ items,total }` | Yes | Exists; fields/pagination differ |
 | User | POST `/system/user` | demo sends `name,deptId,status,remark,permissions` | **Missing** | Missing |
 | User | PUT `/system/user/:id` | partial update, including status | **Missing** | Missing |
@@ -178,6 +178,16 @@ The locked v5.7.0 department form submits `name`, optional `pid`, numeric `statu
 The user explicitly owns database creation, so M3 changes only TypeORM entity mappings and application behavior: no migration or DDL execution. `sys_user.dept_id` is nullable, indexed, and restrictive. Department writes use serializable transactions and validate the full parent chain. Delete is a soft delete rejected by active child or any persisted user reference, including soft-deleted users so later restoration cannot produce a dangling logical reference. Changing a department's numeric status has no cascade semantics; descendants and users remain unchanged.
 
 The management query projects entities rather than serializing relations, preserves bigint strings, maps `createdAt` to `createTime`, and recursively sorts by `order/name/id`. Defensive normalization promotes orphans and self-links to roots and deterministically opens historical cycles, so malformed pre-existing data cannot disappear or produce cyclic JSON. DTO and service validation accept only numeric `0 | 1`, enforce PostgreSQL bigint range at the write boundary, and map unique, foreign-key, serialization, and deadlock races to stable HTTP 409 responses.
+
+## Implemented role boundary for M4
+
+The locked v5.7.0 role page sends `name`, numeric `status`, optional `remark`, and a `permissions` array of menu IDs. Its grid requests `page/pageSize` plus optional `name`, `id`, `status`, `remark`, `startTime`, and `endTime`, and consumes `id/name/status/remark/createTime/permissions` inside the project's approved `{ items,total }` pagination shape. The status switch performs a partial PUT containing only `status`, so update fields must remain independently optional.
+
+The backend adds `code` as an immutable authorization identity separate from editable `name`. Create may supply a constrained custom code; omission generates `role:<uuid>`. Public creation cannot claim the reserved `super`, `admin`, or `user` codes, while deployment setup creates the built-in super role directly. Codes remain unique across soft deletion so identity is never silently recycled; display names are unique only among non-deleted roles. `is_default` is deployment-owned and returned for administrative visibility, but is not writable through the Vben CRUD contract.
+
+Role writes use serializable transactions and lock the current role. A supplied permission array is normalized as PostgreSQL bigint strings, every referenced non-deleted menu is locked and validated, then `sys_role_menu` is replaced atomically; omitted permissions on partial update preserve current mappings. Roles identified by `code=super` or `is_default=true` cannot be disabled or deleted. Other status changes do not rewrite user-role rows or user status. Delete also rejects any persisted user-role reference and hard-removes now-unreferenced role-menu mappings before soft-deleting the role.
+
+Every successful update gathers distinct active assignees inside the transaction and deletes only those users' effective-permission cache keys after commit. Create has no assignees, and a deletable role is required to have none. M4 changes TypeORM mappings and behavior only; the deployment owner creates/rebuilds role tables and no migration or DDL is generated.
 
 ## Browser security deployment model
 

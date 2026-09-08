@@ -1,31 +1,32 @@
 import type { Relation } from 'typeorm'
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
-import { Column, Entity, OneToMany } from 'typeorm'
+import { ApiHideProperty } from '@nestjs/swagger'
+import { Check, Column, Entity, Index, OneToMany } from 'typeorm'
 import { CommonEntity } from '#/common/entity/common.entity.js'
 import SysUserRoleEntity from '#/modules/user/entities/user-role.entity.js'
+import { RoleStatus } from '../role.types.js'
 import SysRoleMenuEntity from './role-menu.entity.js'
 
 @Entity({ name: 'sys_role' })
+@Check('chk_sys_role_status', '"status" IN (0, 1)')
 export class SysRoleEntity extends CommonEntity {
-  @Column({ length: 50, unique: true })
-  @ApiProperty({ description: '角色名' })
+  @Column({ length: 50 })
+  @Index('uq_sys_role_name', { unique: true, where: '"deleted_at" IS NULL' })
   name: string
 
-  @Column({ unique: true, comment: '角色标识' })
-  @ApiProperty({ description: '角色标识' })
+  @Column({ length: 64 })
+  @Index('uq_sys_role_code', { unique: true })
   code: string
 
-  @Column({ nullable: true })
-  @ApiProperty({ description: '角色描述' })
-  remark: string
+  @Column({ length: 255, nullable: true })
+  remark?: string | null
 
-  @Column({ default: false })
-  @ApiProperty({ description: '状态：1启用，0禁用' })
-  status: boolean
+  @Column({ type: 'smallint', default: RoleStatus.ENABLED })
+  @Index('idx_sys_role_status')
+  status: RoleStatus
 
-  @Column({ default: false })
-  @ApiProperty({ description: '是否默认用户' })
-  default: boolean
+  @Column({ name: 'is_default', default: false })
+  @Index('idx_sys_role_is_default')
+  isDefault: boolean
 
   @ApiHideProperty()
   @OneToMany(() => SysUserRoleEntity, ur => ur.role, {

@@ -21,10 +21,14 @@
 | `POST` | `/system/dept` | JWT + `system:dept:create` | 新增部门，返回 boolean |
 | `PUT` | `/system/dept/:id` | JWT + `system:dept:update` | 修改部门及其父级、排序和状态，返回 boolean |
 | `DELETE` | `/system/dept/:id` | JWT + `system:dept:delete` | 软删除无子部门且无用户引用的部门，返回 boolean |
+| `GET` | `/system/role/list` | JWT + `system:role:list` | 按 Vben 查询条件返回 `{ items,total }` 角色分页 |
+| `POST` | `/system/role` | JWT + `system:role:create` | 新增角色并保存菜单/按钮授权，返回 boolean |
+| `PUT` | `/system/role/:id` | JWT + `system:role:update` | 局部修改角色或原子替换授权，返回 boolean |
+| `DELETE` | `/system/role/:id` | JWT + `system:role:delete` | 删除未受保护且无用户引用的角色，返回 boolean |
 | `GET` | `/user/info` | JWT | 返回专用 DTO：`userId`、`username`、`realName`、`avatar`、`homePath`、`desc` 与角色数组 |
 | `GET` | `/system/user/list` | JWT | 分页查询系统用户，支持按 `id`、`nickname` 排序 |
 
-`RoleController`、`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。菜单模块已发布运行时 `/menu/all` 以及完整的菜单管理读写路径。
+`AiController` 和 `CacheController` 当前没有路由，不能作为可用 API。系统模块已发布部门、角色与菜单管理路径；菜单模块还提供运行时 `/menu/all`。
 
 ## 动态菜单
 
@@ -56,6 +60,16 @@ Authorization: Bearer eyJ...
 写操作在可串行化事务中执行，完整父链会被校验和锁定；不存在的父级、自引用、挂到后代以及同级活动部门重名会被拒绝。删除使用软删除，只允许删除没有活动子部门、且没有任何现存或软删除用户引用的叶子部门。停用部门只修改该部门本身，不级联停用子部门或用户。
 
 本批次仅提供 TypeORM 映射和业务逻辑，不生成或执行迁移。部署方需要按 `SysDeptEntity` 创建 `sys_dept`，并为 `sys_user` 增加 nullable、indexed、`RESTRICT` 的 `dept_id` 外键。
+
+## 角色管理
+
+`GET /api/system/role/list` 接受 `page`、`pageSize`、`name`、`id`、`status`、`remark`、`startTime`、`endTime`。`id` 是精确 bigint 字符串筛选，名称和备注是转义通配符后的大小写不敏感包含筛选，时间使用 ISO 8601 且开始时间不能晚于结束时间。响应业务数据为 `{ items,total }`；每项包含 `id/name/code/status/remark/createTime/permissions/isDefault`，其中 `permissions` 是数值顺序稳定的菜单/按钮 bigint 字符串 ID 数组。
+
+`POST /api/system/role` 接收 `name/status/remark/permissions` 和可选 `code`。省略 code 时生成不可变的 `role:<uuid>`；公开接口不能创建 `super/admin/user` 保留码。`PUT /api/system/role/:id` 是局部更新，故状态开关可以只提交 `{ status }`；code 不属于更新 DTO，不能更改。提交 `permissions` 时会先锁定并验证全部未软删除菜单，再在同一可串行化事务中完整替换 `sys_role_menu`；省略该字段则保留现有授权。
+
+`code=super` 或 `is_default=true` 的角色不能停用或删除。其他角色停用不会级联停用用户或删除用户角色关系；删除仍有任何 `sys_user_role` 引用的角色会返回 HTTP 409。修改成功后，只清理该角色当前所有用户的有效权限缓存，事务失败不会产生部分授权。
+
+角色 `status` 与 Vben 一致保存为 smallint `0 | 1`。角色名称仅在未软删除记录中唯一，code 跨软删除全局唯一；`sys_user_role.role_id` 删除策略为 `RESTRICT`。本批不生成或执行迁移，部署方需要依据实体重建 `sys_role`、`sys_role_menu` 及相关外键。
 
 ## 登录
 

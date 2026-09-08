@@ -3,6 +3,7 @@ import type { UserRoleService } from '#/modules/user/user-role/user-role.service
 import { PATH_METADATA } from '@nestjs/common/constants'
 import { ResOp } from '#/common/dto/response.dto.js'
 import { Roles } from '#/modules/auth/auth.constant.js'
+import { RoleStatus } from '../role/role.types.js'
 import { SysMenuEntity } from './entities/menu.entity.js'
 import { MenuController } from './menu.controller.js'
 import { MenuService } from './menu.service.js'
@@ -98,7 +99,7 @@ describe('vben runtime dynamic menus', () => {
     )
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'role.status = :roleStatus',
-      { roleStatus: true },
+      { roleStatus: RoleStatus.ENABLED },
     )
   })
 

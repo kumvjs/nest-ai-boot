@@ -70,6 +70,14 @@ sys_user ───────> sys_dept（nullable，删除 RESTRICT）
 
 部门写服务通过可串行化事务、父链锁和数据库约束共同保护树结构及并发唯一性。删除前检查活动子部门和全部用户引用；修改 `status` 不操作子部门、用户、角色或权限缓存。与菜单重建一样，本批次不生成迁移或执行 DDL，实际新表与用户字段由部署方创建。
 
+## 角色持久化与授权
+
+`sys_role` 将不可变的机器标识 `code` 与可编辑显示名 `name` 分离。`status` 使用 Vben numeric `0 | 1`，`is_default` 由部署初始化维护。code 跨软删除保持唯一，避免角色身份被回收复用；name 只在活动记录中唯一。公开创建接口不能占用 `super/admin/user` 系统保留码，未提供 code 时生成 `role:<uuid>`。
+
+角色权限表单中的 `permissions` 是 `sys_menu` ID，不是 `auth_code` 字符串。更新先锁定并确认所有菜单仍存在，再 hard-delete 旧 `sys_role_menu` 并插入新集合；整个替换与角色更新处于同一个可串行化事务。未提交 permissions 的局部更新保留原映射。
+
+`super` 和 `is_default=true` 角色不能停用或删除，普通角色存在任何用户关系时也不能删除。`sys_user_role` 使用命名的用户/角色索引、唯一用户角色对以及 `role_id ON DELETE RESTRICT`。角色更新提交后，只失效当前分配该角色用户的 `auth:user:permissions:*` 缓存。角色停用不改写用户账号或 `sys_user_role`；权限变化由下一次缓存回源立即反映。本批不生成数据库迁移，部署方负责按新映射创建角色相关表和外键。
+
 ```ts
 @RequirePermissions('system:user:list')
 @Get('list')
@@ -91,7 +99,8 @@ review() {}
 - `/system/menu/name-exists` 与 `/system/menu/path-exists` 复用 `system:menu:list`，供菜单管理表单执行唯一性预检查。
 - `/system/menu` 的 POST、PUT、DELETE 已分别使用 `system:menu:create`、`system:menu:update`、`system:menu:delete`，成功响应为统一 envelope 中的 boolean。
 - `/system/dept/list` 及部门 POST、PUT、DELETE 已使用各自 `system:dept:*` 权限，提供稳定部门树和受约束的持久化写入。
+- `/system/role/list` 及角色 POST、PUT、DELETE 已使用各自 `system:role:*` 权限，提供 Vben 分页、局部状态更新和事务性菜单授权。
 - 菜单实体已采用 Vben 五类型、JSONB 元数据、numeric 状态与 bigint `pid` 自关联；权限查询服务和按用户缓存失效入口已经存在。
-- 角色 Controller 尚无写入 CRUD 路由；菜单的角色授权变更仍由后续角色管理批次负责。
-- 菜单与部门 Swagger DTO 已接入管理查询和 CRUD；用户与角色完整管理流程尚未实现。
-- 菜单 CRUD 已在提交后定向失效受影响用户权限缓存；角色菜单授权映射写接口尚未实现，后续实现必须复用同一原则。
+- 角色实体采用不可变 code、numeric 状态和活动名称唯一约束；角色授权变更会在提交后定向失效受影响用户权限缓存。
+- 菜单、部门与角色 Swagger DTO 已接入管理查询和 CRUD；用户完整管理流程尚未实现。
+- 菜单和角色写服务均执行定向权限缓存失效；后续用户角色分配仍必须复用同一原则。

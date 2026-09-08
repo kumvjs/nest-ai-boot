@@ -228,9 +228,17 @@ Vben v5.7.0 的部门页可使用 `GET /system/dept/list`、`POST /system/dept`�
 
 部门及用户归属字段由部署方依据实体映射新建，本代码不执行数据库迁移；上线接口前必须先创建 `sys_dept` 和 `sys_user.dept_id`。
 
+### 角色管理
+
+Vben v5.7.0 角色页可使用 `GET /system/role/list` 及角色 POST、PUT、DELETE。生成客户端解包后，列表结果是 `{ items,total }`，写操作结果是 boolean。查询支持页面现有的 `page/pageSize/name/id/status/remark/startTime/endTime`；角色项的 `permissions` 是菜单管理树中的 bigint 字符串 ID。
+
+创建角色可额外提交不可变 `code`，省略时后端生成 `role:<uuid>`；编辑接口不会接受 code。权限树值会在事务中整体替换，任何不存在或已软删除的菜单 ID 都会使整次修改失败。只切换状态时前端可继续提交 `{ status }`，不会清空权限。
+
+`super` 和部署方标记的默认角色不能停用或删除；存在用户引用的普通角色也不能删除。角色授权或状态提交成功后，后端会定向清除所有受影响用户的权限缓存。角色表和关联表仍由部署方依据实体创建，本代码不执行迁移。
+
 ### 尚缺接口
 
-- 角色、用户的完整 CRUD（部门 CRUD 已完成）；
+- 用户的完整 CRUD（部门、角色 CRUD 已完成）；
 - 用户状态、密码修改，以及角色/用户授权写操作中的权限缓存失效挂钩；
 - 文件上传等 Vben 常用管理接口。
 

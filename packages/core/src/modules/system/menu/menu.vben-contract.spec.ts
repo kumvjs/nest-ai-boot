@@ -1,6 +1,7 @@
 import type { Repository } from 'typeorm'
 import type { UserRoleService } from '#/modules/user/user-role/user-role.service.js'
 import { Roles } from '#/modules/auth/auth.constant.js'
+import { RoleStatus } from '../role/role.types.js'
 import { SysMenuEntity } from './entities/menu.entity.js'
 import { MenuService } from './menu.service.js'
 import { MenuStatus, MenuType } from './menu.types.js'
@@ -62,7 +63,7 @@ describe('vben effective permission codes', () => {
     )
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'role.status = :roleStatus',
-      { roleStatus: true },
+      { roleStatus: RoleStatus.ENABLED },
     )
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'menu.status = :menuStatus',

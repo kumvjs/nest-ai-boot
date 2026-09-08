@@ -52,12 +52,12 @@ Acceptance: department writes persist, tree invariants hold under concurrent upd
 
 ## M4 — Role management
 
-- [ ] Implement Vben `{ items,total }` role pagination with `page,pageSize,name,id,status,remark,startTime,endTime`.
-- [ ] Implement `POST /system/role`, `PUT /system/role/:id`, and `DELETE /system/role/:id`.
-- [ ] Keep immutable unique role `code` separate from editable display `name`.
-- [ ] Replace `sys_role_menu` permissions transactionally and validate every referenced menu/button ID.
-- [ ] Protect super/default roles and reject deletion of roles still assigned to users.
-- [ ] Invalidate effective permissions for every affected user after commit.
+- [x] Implement Vben `{ items,total }` role pagination with `page,pageSize,name,id,status,remark,startTime,endTime`.
+- [x] Implement `POST /system/role`, `PUT /system/role/:id`, and `DELETE /system/role/:id`; database creation remains deployment-owned and no migration is generated.
+- [x] Keep immutable unique role `code` separate from editable display `name`.
+- [x] Replace `sys_role_menu` permissions transactionally and validate every referenced menu/button ID.
+- [x] Protect super/default roles and reject deletion of roles still assigned to users.
+- [x] Invalidate effective permissions for every affected user after commit.
 
 Acceptance: role CRUD and permission assignment are transactional, protected roles cannot be corrupted, and users observe new permissions without stale cache.
 
